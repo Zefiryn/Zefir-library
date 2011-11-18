@@ -147,7 +147,7 @@ class Zefir_Action_Helper_Localization extends Zend_Controller_Action_Helper_Abs
 	
 	protected function _getBrowserLang($options)
 	{
-		$accepted_lang = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
+		$accepted_lang = isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? $_SERVER['HTTP_ACCEPT_LANGUAGE'] : NULL;
 		
 		if (strstr($accepted_lang, 'pl'))
 		{

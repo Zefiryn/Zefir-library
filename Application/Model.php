@@ -4,6 +4,12 @@
  */
 /**
  * Main class for all models
+ * In order to function properly the model needs to have defined publi properties
+ * which names correspond to the columns names in the database table.
+ * For accessing related data defined in Zefir_Application_Model_DbTable class there need 
+ * to be defined protected properties which names match the key in 
+ * $_belongsTo and $_hasMany arrays
+ * 
  * @author zefiryn
  * @since Jan 2011
  *
@@ -11,14 +17,24 @@
 class Zefir_Application_Model {
 	
 	/**
+	 * Zefir_Application_Model_DbTable class
+	 * 
 	 * @var Zend_Db_Table
 	 */
 	protected $_dbTable;
+	
+	
 	/**
+	 * Name of the Zefir_Application_Model_DbTable class related to this model
+	 * 
 	 * @var string
 	 */
 	protected $_dbTableModelName;
+	
+	
 	/**
+	 * Set this to TRUE if this model has no table in the database
+	 * 
 	 * @var boolean
 	 */
 	protected $_externalModel = FALSE;
@@ -49,7 +65,7 @@ class Zefir_Application_Model {
 	 * @var array
 	 */
 	protected $_imageData = array();
-     
+	 
 	/**
 	 * Constructor
 	 * 
@@ -109,7 +125,7 @@ class Zefir_Application_Model {
 	    $this->_dbTable = $dbTable;
 	    return $this;
 	}
-     
+	 
 	/**
 	 * Get current Zend_Db_Table object
 	 * 
@@ -131,12 +147,16 @@ class Zefir_Application_Model {
 	 * @access public
 	 * @param string $name
 	 * @param mixed $value
-	 * @throws Exception
-	 * @return void
+	 * @return Zefir_Application_Model
 	 */
 	public function __set($name, $value) 
 	{
-	    $this->$name = $value;
+		if (property_exists($this, $name))
+		{
+	    	$this->$name = $value;
+		}
+		
+		return $this;
 	}
  
 	/**
@@ -148,16 +168,27 @@ class Zefir_Application_Model {
 	 */
 	public function __get($name) 
 	{
+		//retrieve data from parent model
     	if ($this->_isBelongsTo($name))
     	{	
     		return $this->_getParent($name);
     	}
+    	
+    	//retrieve data from child model
     	elseif ($this->_isHasMany($name))
     	{
     		return $this->_getChild($name);
     	}
-    	else
+    	
+    	//return the property itself
+    	elseif (property_exists($this, $name))
+    	{
 	    	return $this->$name;
+    	}
+    	
+    	//return FALSE if property doesn't exist in this model
+    	else
+    		return FALSE;
 
 	}
 	
@@ -196,7 +227,7 @@ class Zefir_Application_Model {
 	    }
 	    return $this;
 	}
-	       
+		   
 	/**
 	 * Convert the object to an array
 	 * 
@@ -205,7 +236,7 @@ class Zefir_Application_Model {
 	 */
 	public function toArray() 
 	{
-            
+	 	   
     	return get_object_vars($this);
 	}
 	

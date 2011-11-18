@@ -452,7 +452,7 @@ class Zefir_Application_Model {
 			}
 			else 
 			{
-				$tableData = $this->_getParentTableFromRegistry($name, $association['model']);
+				$tableData = $this->_getTableFromRegistry($name, $association['model']);
 			}
 			
 			if ($tableData[$this->$column])
@@ -563,11 +563,17 @@ class Zefir_Application_Model {
 		if (!Zend_Registry::isRegistered($modelName))
 		{//load data to registry
 			$model = new $modelName;
-			foreach($model->fetchAll() as $row)
+			$primaryKey = $model->getDbTable()->getPrimaryKey();
+			foreach($model->getDbTable()->fetchAll() as $row)
 			{
-				$tableData[$row[$model->getDbTable()->getPrimaryKey()]] = $row;
+				
+				$tableData[$row->$primaryKey] = $row;
 			}
 			Zend_Registry::set($modelName, $tableData);
+		}
+		else
+		{
+			$tableData = Zend_Registry::get($modelName);
 		}
 		
 		return $tableData;

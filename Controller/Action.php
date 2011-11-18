@@ -10,7 +10,6 @@ class Zefir_Controller_Action extends Zend_Controller_Action
 {
 	protected $_role;
 	protected $_cache;
-	protected $_log = NULL;
 	/**
 	 * init function
 	 * @access public
@@ -51,50 +50,6 @@ class Zefir_Controller_Action extends Zend_Controller_Action
     	
     	$this->view->link = $this->_getCurrentPage();
     	
-    	$this->_startLogger();
-	}
-	
-	/**
-	 * Init logger for debugging
-	 * 
-	 * @access private
-	 * @return void
-	 */
-	protected function _startLogger()
-	{
-		$logger = new Zend_Log();
-		
-		if (is_writable(APPLICATION_PATH.'/../log/'))
-		{
-			$writer = new Zend_Log_Writer_Stream(APPLICATION_PATH.'/../log/debug.log');
-			$format = '%timestamp%: %priorityName%: %message%'.PHP_EOL;
-			
-			$formatter = new Zend_Log_Formatter_Simple($format);
-			$writer->setFormatter($formatter);
-			$logger->addWriter($writer);
-			$this->_log = $logger;
-		}
-	}
-	
-	/**
-	 * Save message in a log
-	 * 
-	 * @access private
-	 * @param mixed $message
-	 * @return void
-	 */
-	protected function _log($message)
-	{
-		if (is_bool($message) || is_null($message)) {
-			$message = var_export($message, true);
-		} else {
-			$message = print_r($message, true);
-		}
-		
-		if ($this->_log)
-		{
-			$this->_log->log($message, Zend_Log::DEBUG);
-		}
 	}
 	
 	/**

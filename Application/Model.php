@@ -22,6 +22,11 @@ class Zefir_Application_Model {
 	 * @var boolean
 	 */
 	protected $_externalModel = FALSE;
+	
+	/**
+	 * @var string
+	 */
+	protected $_fetchingChildren = null;
      
 	/**
 	 * Constructor
@@ -288,8 +293,6 @@ class Zefir_Application_Model {
 			}
 			
 			$this->$key = $value;
-			
-			
 		}
 		
 		return $this;
@@ -303,6 +306,13 @@ class Zefir_Application_Model {
 	 */
 	public function save()
 	{
+		if (Zend_Registry::isRegistered('cache'))
+		{
+			$cache = Zend_Registry::get('cache');
+			$cache->remove(get_class($this));
+			//$cache->clean(Zend_Cache::CLEANING_MODE_MATCHING_TAG, array('table'));
+		}
+		
 		return $this->getDbTable()->save($this);
 	}
 	
@@ -314,6 +324,12 @@ class Zefir_Application_Model {
 	 */
 	public function delete()
 	{
+		if (Zend_Registry::isRegistered('cache'))
+		{
+			$cache = Zend_Registry::get('cache');
+			$cache->remove(get_class($this));
+			//$cache->clean(Zend_Cache::CLEANING_MODE_MATCHING_TAG, array('table'));
+		}
 		$this->getDbTable()->delete($this);
 	}
 	
@@ -427,10 +443,25 @@ class Zefir_Application_Model {
 		else 
 		{
 			$association = $this->_isBelongsTo($name);
-			$referenceColumn = $association['refColumn'];
-			$parentModel = new $association['model']($this->$referenceColumn);
-			$this->$name = $parentModel;
+			$refColumn = $association['column'];
+			$column = $association['refColumn'];
 			
+			if (Zend_Registry::isRegistered('cache'))
+			{
+				$tableData = $this->_getTableFromCache($name, $association['model']);
+			}
+			else 
+			{
+				$tableData = $this->_getParentTableFromRegistry($name, $association['model']);
+			}
+			
+			if ($tableData[$this->$column])
+			{
+					$parentModel = new $association['model'];
+					$parentModel->populate($tableData[$this->$column]);
+			}
+			
+			$this->$name = $parentModel;
 			return $parentModel;
 		}
 	}
@@ -450,12 +481,110 @@ class Zefir_Application_Model {
 		}
 		else
 		{
-
-			$id = $this->getDbTable()->getPrimaryKey();
-			$set = $this->getDbTable()->getChild($this, $name); 
+			$association = $this->_isHasMany($name);
+			$column = $association['refColumn'];
+			
+			if (Zend_Registry::isRegistered('cache'))
+			{
+				$tableData = $this->_getTableFromCache($name, $association['model']);
+			}
+			else 
+			{
+				$tableData = $this->_getTableFromRegistry($name, $association['model']);
+			}
+			
+			if (!isset($association['joinTable']) && !isset($association['joinModel']))
+			{
+				$set = array();
+				$primaryKey = $this->getDbTable()->getPrimaryKey();
+				foreach ($tableData as $row)
+				{
+					if ($row->$column == $this->$primaryKey)
+					{
+						$childModel = new $association['model'];
+						$childModel->populate($row);
+						$set[] = $childModel;
+					}
+				}
+				
+				if (isset($association['order']))
+				{
+					$this->_fetchingChildren = $name; 	
+					usort($set, array($this, '_sortChildren'));
+				}
+			}
+			else 
+			{
+				$set = $this->getDbTable()->getChild($this, $name);
+			} 
 			$this->$name = $set;
 		}
 		return $set;
+	}
+	
+	/**
+	 * Get array of rows for the related table from Zend_Cache
+	 * @access private
+	 * @param string $name
+	 * @return array
+	 */
+	protected function _getTableFromCache($name, $modelName)
+	{
+		$cache = Zend_Registry::get('cache');
+		
+		//array of cached table; each key if Db_Row
+		$tableData = $cache->load($modelName);
+		
+		if (!$tableData)
+		{//load entire table data from the database and cache it
+			$tableData = array();
+			
+			$model = new $modelName;
+			$primaryKey = $model->getDbTable()->getPrimaryKey();
+			foreach($model->getDbTable()->fetchAll() as $row)
+			{
+				$tableData[$row[$primaryKey]] = $row;
+			}
+			$cache->save($tableData, $modelName, array('table'));
+		}
+		
+		return $tableData;
+	}
+	
+	/**
+	 * Get parent model from Zend_Registry or from the database
+	 * @access private
+	 * @param string $name
+	 * @return array
+	 */
+	protected function _getTableFromRegistry($name, $modelName)
+	{
+		$association = $this->_isBelongsTo($name);
+		if (!Zend_Registry::isRegistered($modelName))
+		{//load data to registry
+			$model = new $modelName;
+			foreach($model->fetchAll() as $row)
+			{
+				$tableData[$row[$model->getDbTable()->getPrimaryKey()]] = $row;
+			}
+			Zend_Registry::set($modelName, $tableData);
+		}
+		
+		return $tableData;
+	}
+	/**
+	 * Call compare objects with order array
+	 * @param unknown_type $set
+	 */
+	protected function _sortChildren($a, $b)
+	{
+		$assoc = $this->_isHasMany($this->_fetchingChildren);
+		
+		$order = $assoc['order'];
+		if (!is_array($order))
+			$order = array($order);
+			
+		return $this->_compareObjects($a, $b, $order);
 	}
 	
 	public function getImageData($key)

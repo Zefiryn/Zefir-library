@@ -22,6 +22,33 @@ class Zefir_Application_Model {
 	 * @var boolean
 	 */
 	protected $_externalModel = FALSE;
+	
+	/**
+	 * Setup model to handle image attachments
+	 * $_image stores basic data about the attachment and it should look like this 
+	 * array(
+	 * 		'property' => model property where image name is stored 
+	 * 		' dir' => directory in which the file is saved 
+	 * );
+	 * @var array
+	 */
+	protected $_image = array();
+	
+	/**
+	 * Setup model to handle image attachments
+	 * $_imageData include information about miniatures that are can be created
+	 * $_imageData is an array of arrays that look like this:
+	 * array(
+	 * 		'thumbName' => array(
+	 * 			'width' => new width in pixels,
+				'height' => new height in pixels,
+				'crop' => TRUE/FALSE - states whether crop the thumbnail or not 
+				'ratio' => width/height  - save file ratio according to new width or height
+	 * 		) 
+	 * );
+	 * @var array
+	 */
+	protected $_imageData = array();
      
 	/**
 	 * Constructor
@@ -458,6 +485,13 @@ class Zefir_Application_Model {
 		return $set;
 	}
 	
+	/**
+	 * Get data about specified thumbnail
+	 * 
+	 * @access public
+	 * @param string $key
+	 * @return array|NULL $_imageData[$key] 
+	 */
 	public function getImageData($key)
 	{
 		if (isset($this->_imageData) && isset($this->_imageData[$key]))
@@ -466,6 +500,12 @@ class Zefir_Application_Model {
 			return NULL;
 	}
 	
+	/**
+	 * Get list of data about thumbnails
+	 * 
+	 * @access public
+	 * @return array|NULL 
+	 */
 	public function getThumbnails()
 	{
 		if (isset($this->_imageData))
@@ -474,6 +514,13 @@ class Zefir_Application_Model {
 			return NULL;
 	}
 	
+	/**
+	 * Create path to the thumbnail file
+	 * 
+	 * @access public
+	 * @param string $key
+	 * @return string|boolean 
+	 */
 	public function getImage($key)
 	{
 		
@@ -487,6 +534,12 @@ class Zefir_Application_Model {
 		return FALSE;
 	}
 	
+	/**
+	 * Make new thumbnail according to current settings
+	 * 
+	 * @access public
+	 * @return boolean TRUE|FALSE
+	 */
 	public function resizeImage()
 	{
 		if (isset($this->_image))

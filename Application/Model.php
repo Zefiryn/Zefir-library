@@ -248,13 +248,20 @@ class Zefir_Application_Model {
 	 * @param array $properties
 	 * @return int
 	 */
-	protected function _compareObjects($a, $b, $properties)
+	protected function _compareObjects($a, $b, $properties, $direction = 'ASC')
 	{
 		foreach($properties as $property)
 		{
 			if (mb_strtolower($a->$property, 'UTF8') <> mb_strtolower($b->$property, 'UTF8'))
 			{
-				return (mb_strtolower($a->$property, 'UTF8') < mb_strtolower($b->$property, 'UTF8')) ? -1 : 1;
+				if ($direction == 'ASC')
+				{
+					return (mb_strtolower($a->$property, 'UTF8') < mb_strtolower($b->$property, 'UTF8')) ? -1 : 1;
+				}
+				else
+				{
+					return (mb_strtolower($a->$property, 'UTF8') > mb_strtolower($b->$property, 'UTF8')) ? -1 : 1;
+				}
 			}
 		}
 		
@@ -587,10 +594,25 @@ class Zefir_Application_Model {
 		$assoc = $this->_isHasMany($this->_fetchingChildren);
 		
 		$order = $assoc['order'];
-		if (!is_array($order))
+		if (!is_array($order)) 
+		{
 			$order = array($order);
-			
-		return $this->_compareObjects($a, $b, $order);
+		}
+		
+		//default direction
+		$direction = 'ASC';
+		
+		foreach($order as $id => $orderStmt) 
+		{
+			if (strstr($orderStmt, 'ASC') || strstr($orderStmt, 'DESC'))
+			{
+				$parts = explode(' ', $orderStmt);
+				$order[$id] = $parts[0];
+				$direction = $parts[1];
+			}
+		}
+		
+		return $this->_compareObjects($a, $b, $order, $direction);
 	}
 	
 	public function getImageData($key)
@@ -643,6 +665,11 @@ class Zefir_Application_Model {
 	
 	public function order($string) 
 	{
+		if (strstr($string, 'ASC') || strstr($string, 'DESC')) 
+		{
+			$array = explode(' ', trim($string));
+			$string = array($array[1], $array[2]);			
+		} 
 		return $this->getDbTable()->select()->order($string);
 	}
 	

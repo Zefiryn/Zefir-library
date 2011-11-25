@@ -169,28 +169,32 @@ class Zefir_Application_Model {
 	 */
 	public function __get($name) 
 	{
+		Zefir_Pqp_Classes_Console::logSpeed('Fetching data for '.$name);
 		//retrieve data from parent model
     	if ($this->_isBelongsTo($name))
     	{	
-    		return $this->_getParent($name);
+    		$return = $this->_getParent($name);
     	}
     	
     	//retrieve data from child model
     	elseif ($this->_isHasMany($name))
     	{
-    		return $this->_getChild($name);
+    		$return = $this->_getChild($name);
     	}
     	
     	//return the property itself
     	elseif (property_exists($this, $name))
     	{
-	    	return $this->$name;
+	    	$return = $this->$name;
     	}
     	
     	//return FALSE if property doesn't exist in this model
     	else
-    		return FALSE;
+    		$return = FALSE;
+    	
+    	Zefir_Pqp_Classes_Console::logSpeed('Data for '.$name. ' fetched');
 
+    	return $return;
 	}
 	
 	/**

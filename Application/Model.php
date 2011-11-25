@@ -183,7 +183,7 @@ class Zefir_Application_Model {
 	 */
 	public function __get($name) 
 	{
-		Zefir_Pqp_Classes_Console::logSpeed('get '.$name.' called');
+		Zefir_Pqp_Classes_Console::logSpeed('Fetching data for '.$name);
 		//retrieve data from parent model
     	if ($this->_isBelongsTo($name))
     	{	
@@ -205,8 +205,9 @@ class Zefir_Application_Model {
     	//return FALSE if property doesn't exist in this model
     	else
     		$return = FALSE;
+    	
+    	Zefir_Pqp_Classes_Console::logSpeed('Data for '.$name. ' fetched');
 
-    	Zefir_Pqp_Classes_Console::logSpeed('data for '.$name.' retrieved');
     	return $return;
 	}
 	

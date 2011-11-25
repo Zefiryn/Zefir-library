@@ -66,7 +66,7 @@ class Zefir_Controller_Action extends Zend_Controller_Action
     	 */
     	if ($options['pqprofiler']['enabled'] == TRUE) 
     	{
-    		$this->pqprofiler = new Zefir_Pqp_Classes_PhpQuickProfiler(PhpQuickProfiler::getMicroTime());
+    		$this->pqprofiler = new Zefir_Pqp_Classes_PhpQuickProfiler(Zefir_Pqp_Classes_PhpQuickProfiler::getMicroTime());
     		$this->view->headLink()->appendStylesheet($this->view->baseUrl.'css/pqp/pQp.css');
     	}
 	}
@@ -78,7 +78,7 @@ class Zefir_Controller_Action extends Zend_Controller_Action
     	
     	$options = Zend_Registry::get('options');
     	if ($options['pqprofiler']['enabled'] && !$this->getRequest()->isXMLHttpRequest()) {
-    		$this->pqprofiler->display(Zefir_Db_Adapter_Pdo_Mysql::$queries);	
+    		$this->pqprofiler->display(Zend_Registry::get('adapter'));	
     	}
     }
 	

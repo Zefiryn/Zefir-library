@@ -31,7 +31,7 @@ class Zefir_Pqp_Classes_PhpQuickProfiler {
 	-------------------------------------------*/
 	
 	public function gatherConsoleData() {
-		$logs = Console::getLogs();
+		$logs = Zefir_Pqp_Classes_Console::getLogs();
 		if(@$logs['console']) {
 			foreach($logs['console'] as $key => $log) {
 				if($log['type'] == 'log') {
@@ -99,9 +99,9 @@ class Zefir_Pqp_Classes_PhpQuickProfiler {
 		$queries = array();
 		
 		if($this->db != '') {
-			$queryTotals['count'] = count($this->db);//$this->db->queryCount;
-			foreach($this->db as $key => $query) {
-				//$query = $this->attemptToExplainQuery($query);
+			$queryTotals['count'] += Zefir_Db_Adapter_Pdo_Mysql::$queryCount;
+			foreach(Zefir_Db_Adapter_Pdo_Mysql::$queries as $key => $query) {
+				$query = $this->attemptToExplainQuery($query);
 				$queryTotals['time'] += $query['time'];
 				$query['time'] = $this->getReadableTime($query['time']);
 				$queries[] = $query;
@@ -118,13 +118,15 @@ class Zefir_Pqp_Classes_PhpQuickProfiler {
 	----------------------------------------------------------*/
 	
 	function attemptToExplainQuery($query) {
+		$rs = null; 
 		try {
 			$sql = 'EXPLAIN '.$query['sql'];
 			$rs = $this->db->query($sql);
 		}
-		catch(Exception $e) {}
+		catch(Exception $e) {
+		}
 		if($rs) {
-			$row = mysql_fetch_array($rs, MYSQL_ASSOC);
+			$row = $rs->fetch();
 			$query['explain'] = $row;
 		}
 		return $query;

@@ -18,10 +18,16 @@ class Zefir_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql {
 	 */
 	public static $queries = array();
 	
+	/**
+	 * Number of queries
+	 * @var int
+	 */
+	public static $queryCount;
+	
 	public function __construct($config = array()){
 		
 		$options = Zend_Registry::get('options');
-		self::$_logging = $options['pqpprofiler']['enabled'];
+		self::$_logging = $options['pqprofiler']['enabled'];
 		
 		parent::__construct($config);
 	}
@@ -34,8 +40,7 @@ class Zefir_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql {
 	 		else {
 	 			$stmt = $sql;
 	 		}
-	 		$start = $this->getTime();
-	 		
+	 		$start = $this->getTime();	 		
 	 	}
 	 	
 	 	$return = parent::query($sql, $bind);
@@ -52,6 +57,7 @@ class Zefir_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql {
 	        'sql' => $sql,
 	        'time' => ($this->getTime() - $start)*1000
 	    );
+	    self::$queryCount += 1;
 	    array_push(self::$queries, $query);
 	}
 	 

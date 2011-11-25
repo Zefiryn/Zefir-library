@@ -66,7 +66,7 @@ class Zefir_Pqp_Classes_Console {
 	
 	public static function logSpeed($name = 'Point in Time') {
 		$logItem = array(
-			"data" => PhpQuickProfiler::getMicroTime(),
+			"data" => Zefir_Pqp_Classes_PhpQuickProfiler::getMicroTime(),
 			"type" => 'speed',
 			"name" => $name
 		);

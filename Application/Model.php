@@ -268,6 +268,37 @@ class Zefir_Application_Model {
 	}
 	
 	/**
+	 * Add new field for this application
+	 * 
+	 * @access public
+	 * @param Application_Model_DiplomaFields $field
+	 * @return Applcation_Model_Diplomas $this
+	 */
+	public function addChild(Zefir_Application_Model $object, $var)
+	{
+		if (!is_array($this->$var))
+			$this->$var = array();
+			
+		array_push($this->$var, $object);
+
+		return $this;
+	}
+	
+	/**
+	 * Add parent
+	 * 
+	 * @access public
+	 * @param Application_Model_DiplomaFields $field
+	 * @return Applcation_Model_Diplomas $this
+	 */
+	public function addParent(Zefir_Application_Model $object, $var)
+	{
+		$this->$var = $object;
+
+		return $this;
+	}
+	
+	/**
 	 * Get an array of all data from the database
 	 * 
 	 * @access public

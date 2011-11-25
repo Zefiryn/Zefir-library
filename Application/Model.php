@@ -70,6 +70,8 @@ class Zefir_Application_Model {
 	 * @var array
 	 */
 	protected $_imageData = array();
+	
+	protected static $_cache;
 	 
 
 	/**
@@ -105,6 +107,12 @@ class Zefir_Application_Model {
 
 	    	if ($row)
 	    		$this->populate($row);	
+	    }
+	    
+	    
+	    if (!self::$_cache !== null && Zend_Registry::isRegistered('cache')) 
+	    {
+	    	self::$_cache = Zend_Registry::get('cache');
 	    }
 	    
 	    return $this;
@@ -175,28 +183,31 @@ class Zefir_Application_Model {
 	 */
 	public function __get($name) 
 	{
+		Zefir_Pqp_Classes_Console::logSpeed('get '.$name.' called');
 		//retrieve data from parent model
     	if ($this->_isBelongsTo($name))
     	{	
-    		return $this->_getParent($name);
+    		$return = $this->_getParent($name);
     	}
     	
     	//retrieve data from child model
     	elseif ($this->_isHasMany($name))
     	{
-    		return $this->_getChild($name);
+    		$return = $this->_getChild($name);
     	}
     	
     	//return the property itself
     	elseif (property_exists($this, $name))
     	{
-	    	return $this->$name;
+	    	$return = $this->$name;
     	}
     	
     	//return FALSE if property doesn't exist in this model
     	else
-    		return FALSE;
+    		$return = FALSE;
 
+    	Zefir_Pqp_Classes_Console::logSpeed('data for '.$name.' retrieved');
+    	return $return;
 	}
 	
 	/**
@@ -278,22 +289,13 @@ class Zefir_Application_Model {
 	 */
 	public function fetchAll($args = null)
 	{
-		if (Zend_Registry::isRegistered('set_'.get_class($this)))
-		{
-			$set = Zend_Registry::get('set_'.get_class($this));
-		}
-		else
-		{
-			$rowset = $this->getDbTable()->getAll($args);
+		$rowset = $this->getDbTable()->getAll($args);
 			
-			$set = array();
-			foreach ($rowset as $row)
-			{
-				$object = new $this;
-				$set[] = $object->populate($row);
-			}
-			
-			Zend_Registry::set('set_'.get_class($this), $set);
+		$set = array();
+		foreach ($rowset as $row)
+		{
+			$object = new $this;
+			$set[] = $object->populate($row);
 		}
 		
 		return ($set);
@@ -513,7 +515,7 @@ class Zefir_Application_Model {
 			$refColumn = $association['column'];
 			$column = $association['refColumn'];
 			
-			if (Zend_Registry::isRegistered('cache'))
+			if (self::$_cache !== null)
 			{
 				$tableData = $this->_getTableFromCache($name, $association['model']);
 			}
@@ -522,13 +524,14 @@ class Zefir_Application_Model {
 				$tableData = $this->_getTableFromRegistry($name, $association['model']);
 			}
 			
-			if ($tableData[$this->$column])
+			if (isset($tableData[$this->$column]))
 			{
 					$parentModel = new $association['model'];
 					$parentModel->populate($tableData[$this->$column]);
 			}
 			
 			$this->$name = $parentModel;
+			
 			return $parentModel;
 		}
 	}
@@ -551,7 +554,7 @@ class Zefir_Application_Model {
 			$association = $this->_isHasMany($name);
 			$column = $association['refColumn'];
 			
-			if (Zend_Registry::isRegistered('cache'))
+			if (self::$_cache !== null)
 			{
 				$tableData = $this->_getTableFromCache($name, $association['model']);
 			}
@@ -582,6 +585,9 @@ class Zefir_Application_Model {
 			}
 			else 
 			{
+				/**
+				 * @todo add loops for data in others table
+				 */
 				$set = $this->getDbTable()->getChild($this, $name);
 			} 
 			$this->$name = $set;
@@ -597,10 +603,8 @@ class Zefir_Application_Model {
 	 */
 	protected function _getTableFromCache($name, $modelName)
 	{
-		$cache = Zend_Registry::get('cache');
-		
 		//array of cached table; each key if Db_Row
-		$tableData = $cache->load($modelName);
+		$tableData = self::$_cache->load($modelName);
 		
 		if (!$tableData)
 		{//load entire table data from the database and cache it
@@ -612,7 +616,7 @@ class Zefir_Application_Model {
 			{
 				$tableData[$row[$primaryKey]] = $row;
 			}
-			$cache->save($tableData, $modelName, array('table'));
+			self::$_cache->save($tableData, $modelName, array('table'));
 		}
 		
 		return $tableData;

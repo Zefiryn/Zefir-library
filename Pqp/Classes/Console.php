@@ -33,16 +33,25 @@ class Zefir_Pqp_Classes_Console {
 	-----------------------------------------------------*/
 	
 	public static function logMemory($object = false, $name = 'PHP') {
+		
 		$memory = memory_get_usage();
+		
 		if($object) $memory = strlen(serialize($object));
+		
+		$dataType = gettype($object);
+		if ($dataType == 'object') 
+		{
+			$dataType = get_class($object);	
+		}
+		
 		$logItem = array(
 			"data" => $memory,
 			"type" => 'memory',
 			"name" => $name,
-			"dataType" => gettype($object)
+			"dataType" => $dataType 
 		);
-		$GLOBALS['debugger_logs']['console'][] = $logItem;
-		$GLOBALS['debugger_logs']['memoryCount'] += 1;
+		@$GLOBALS['debugger_logs']['console'][] = $logItem;
+		@$GLOBALS['debugger_logs']['memoryCount'] += 1;
 	}
 	
 	/*-----------------------------------

@@ -81,9 +81,19 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
     	$this->_prefix = $options['resources']['db']['params']['prefix'];
     	$this->_name = $this->_prefix.$this->_raw_name;
     	
-    	if ($options['resources']['db']['adapter'] == 'PDO_MYSQL')
-		$config['db'] = new Zefir_Db_Adapter_Pdo_Mysql($options['resources']['db']['params']);
-		Zend_Registry::set('adapter', $config['db']);
+    	if ($options['resources']['db']['adapter'] == 'PDO_MYSQL') 
+    	{
+			if (!Zend_Registry::isRegistered('adapter'))
+			{
+				$adapter = new Zefir_Db_Adapter_Pdo_Mysql($options['resources']['db']['params']);
+				Zend_Registry::set('adapter', $adapter);
+			}
+			else 
+			{
+				$adapter = Zend_Registry::get('adapter');
+			}
+			$config['db'] = $adapter;
+    	}
 		parent::__construct($config);
   	}
 

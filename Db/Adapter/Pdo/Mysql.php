@@ -24,6 +24,7 @@ class Zefir_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql {
 	 */
 	public static $queryCount;
 	
+	
 	public function __construct($config = array()){
 		
 		$options = Zend_Registry::get('options');

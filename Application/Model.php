@@ -4,6 +4,12 @@
  */
 /**
  * Main class for all models
+ * In order to function properly the model needs to have defined publi properties
+ * which names correspond to the columns names in the database table.
+ * For accessing related data defined in Zefir_Application_Model_DbTable class there need 
+ * to be defined protected properties which names match the key in 
+ * $_belongsTo and $_hasMany arrays
+ * 
  * @author zefiryn
  * @since Jan 2011
  *
@@ -11,14 +17,24 @@
 class Zefir_Application_Model {
 	
 	/**
+	 * Zefir_Application_Model_DbTable class
+	 * 
 	 * @var Zend_Db_Table
 	 */
 	protected $_dbTable;
+	
+	
 	/**
+	 * Name of the Zefir_Application_Model_DbTable class related to this model
+	 * 
 	 * @var string
 	 */
 	protected $_dbTableModelName;
+	
+	
 	/**
+	 * Set this to TRUE if this model has no table in the database
+	 * 
 	 * @var boolean
 	 */
 	protected $_externalModel = FALSE;
@@ -28,6 +44,34 @@ class Zefir_Application_Model {
 	 */
 	protected $_fetchingChildren = null;
      
+	/*
+	 * Setup model to handle image attachments
+	 * $_image stores basic data about the attachment and it should look like this 
+	 * array(
+	 * 		'property' => model property where image name is stored 
+	 * 		' dir' => directory in which the file is saved 
+	 * );
+	 * @var array
+	 */
+	protected $_image = array();
+	
+	/**
+	 * Setup model to handle image attachments
+	 * $_imageData include information about miniatures that are can be created
+	 * $_imageData is an array of arrays that look like this:
+	 * array(
+	 * 		'thumbName' => array(
+	 *	 		'width' => new width in pixels,
+	 *			'height' => new height in pixels,
+	 *			'crop' => TRUE/FALSE - states whether crop the thumbnail or not 
+	 *			'ratio' => width/height  - save file ratio according to new width or height
+	 * 		) 
+	 * );
+	 * @var array
+	 */
+	protected $_imageData = array();
+	 
+
 	/**
 	 * Constructor
 	 * 
@@ -54,6 +98,7 @@ class Zefir_Application_Model {
 			$this->setOptions($options);
 	    }
 	    
+	    //if there is id given retrieve data from the db and populate the model
 	    if ($id != null)
 	    {
 	    	$row = $this->getDbTable()->find($id)->current();
@@ -87,7 +132,7 @@ class Zefir_Application_Model {
 	    $this->_dbTable = $dbTable;
 	    return $this;
 	}
-     
+	 
 	/**
 	 * Get current Zend_Db_Table object
 	 * 
@@ -109,12 +154,16 @@ class Zefir_Application_Model {
 	 * @access public
 	 * @param string $name
 	 * @param mixed $value
-	 * @throws Exception
-	 * @return void
+	 * @return Zefir_Application_Model
 	 */
 	public function __set($name, $value) 
 	{
-	    $this->$name = $value;
+		if (property_exists($this, $name))
+		{
+	    	$this->$name = $value;
+		}
+		
+		return $this;
 	}
  
 	/**
@@ -126,16 +175,27 @@ class Zefir_Application_Model {
 	 */
 	public function __get($name) 
 	{
+		//retrieve data from parent model
     	if ($this->_isBelongsTo($name))
     	{	
     		return $this->_getParent($name);
     	}
+    	
+    	//retrieve data from child model
     	elseif ($this->_isHasMany($name))
     	{
     		return $this->_getChild($name);
     	}
-    	else
+    	
+    	//return the property itself
+    	elseif (property_exists($this, $name))
+    	{
 	    	return $this->$name;
+    	}
+    	
+    	//return FALSE if property doesn't exist in this model
+    	else
+    		return FALSE;
 
 	}
 	
@@ -174,7 +234,7 @@ class Zefir_Application_Model {
 	    }
 	    return $this;
 	}
-	       
+		   
 	/**
 	 * Convert the object to an array
 	 * 
@@ -183,7 +243,7 @@ class Zefir_Application_Model {
 	 */
 	public function toArray() 
 	{
-            
+	 	   
     	return get_object_vars($this);
 	}
 	
@@ -615,6 +675,14 @@ class Zefir_Application_Model {
 		return $this->_compareObjects($a, $b, $order, $direction);
 	}
 	
+	/*
+	 * Get data about specified thumbnail
+	 * 
+	 * @access public
+	 * @param string $key
+	 * @return array|NULL $_imageData[$key] 
+	 */
+
 	public function getImageData($key)
 	{
 		if (isset($this->_imageData) && isset($this->_imageData[$key]))
@@ -623,6 +691,12 @@ class Zefir_Application_Model {
 			return NULL;
 	}
 	
+	/**
+	 * Get list of data about thumbnails
+	 * 
+	 * @access public
+	 * @return array|NULL 
+	 */
 	public function getThumbnails()
 	{
 		if (isset($this->_imageData))
@@ -631,6 +705,13 @@ class Zefir_Application_Model {
 			return NULL;
 	}
 	
+	/**
+	 * Create path to the thumbnail file
+	 * 
+	 * @access public
+	 * @param string $key
+	 * @return string|boolean 
+	 */
 	public function getImage($key)
 	{
 		
@@ -644,6 +725,12 @@ class Zefir_Application_Model {
 		return FALSE;
 	}
 	
+	/**
+	 * Make new thumbnail according to current settings
+	 * 
+	 * @access public
+	 * @return boolean TRUE|FALSE
+	 */
 	public function resizeImage()
 	{
 		if (isset($this->_image))

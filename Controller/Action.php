@@ -10,6 +10,9 @@ class Zefir_Controller_Action extends Zend_Controller_Action
 {
 	protected $_role;
 	protected $_cache;
+	protected $_log = NULL;
+	protected $pqprofiler;
+
 	/**
 	 * init function
 	 * @access public
@@ -48,8 +51,79 @@ class Zefir_Controller_Action extends Zend_Controller_Action
 	    	}
     	}
     	
+    	/**
+    	 * Get the url of the current page
+    	 */
     	$this->view->link = $this->_getCurrentPage();
     	
+    	/**
+    	 * Start Zend Logger
+    	 */
+    	$this->_startLogger();
+    	
+    	/**
+    	 * Add Php Quick Profiler
+    	 */
+    	if ($options['pqprofiler']['enabled'] == TRUE) 
+    	{
+    		$this->pqprofiler = new Zefir_Pqp_Classes_PhpQuickProfiler(Zefir_Pqp_Classes_PhpQuickProfiler::getMicroTime());
+    		$this->view->headLink()->appendStylesheet($this->view->baseUrl.'css/pqp/pQp.css');
+    	}
+	}
+	
+	/**
+	 * Destructor calls pqp
+	 */
+	public function __destruct() {
+    	
+    	$options = Zend_Registry::get('options');
+    	if ($options['pqprofiler']['enabled'] && !$this->getRequest()->isXMLHttpRequest()) {
+    		$this->pqprofiler->display(Zend_Registry::get('adapter'));	
+    	}
+    }
+	
+	/**
+	 * Init logger for debugging
+	 * 
+	 * @access private
+	 * @return void
+	 */
+	protected function _startLogger()
+	{
+		$logger = new Zend_Log();
+		
+		if (is_writable(APPLICATION_PATH.'/../log/'))
+		{
+			$writer = new Zend_Log_Writer_Stream(APPLICATION_PATH.'/../log/debug.log');
+			$format = '%timestamp%: %priorityName%: %message%'.PHP_EOL;
+			
+			$formatter = new Zend_Log_Formatter_Simple($format);
+			$writer->setFormatter($formatter);
+			$logger->addWriter($writer);
+			$this->_log = $logger;
+		}
+	}
+	
+	/**
+	 * Save message in a log
+	 * 
+	 * @access private
+	 * @param mixed $message
+	 * @return void
+	 */
+	protected function _log($message)
+	{
+		if (is_bool($message) || is_null($message)) {
+			$message = var_export($message, true);
+		} else {
+			$message = print_r($message, true);
+		}
+		
+		if ($this->_log)
+		{
+			$this->_log->log($message, Zend_Log::DEBUG);
+		}
+
 	}
 	
 	/**

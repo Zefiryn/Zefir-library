@@ -56,10 +56,10 @@ class Zefir_Application_Model {
 	 * $_imageData is an array of arrays that look like this:
 	 * array(
 	 * 		'thumbName' => array(
-	 * 			'width' => new width in pixels,
-				'height' => new height in pixels,
-				'crop' => TRUE/FALSE - states whether crop the thumbnail or not 
-				'ratio' => width/height  - save file ratio according to new width or height
+	 *	 		'width' => new width in pixels,
+	 *			'height' => new height in pixels,
+	 *			'crop' => TRUE/FALSE - states whether crop the thumbnail or not 
+	 *			'ratio' => width/height  - save file ratio according to new width or height
 	 * 		) 
 	 * );
 	 * @var array
@@ -92,6 +92,7 @@ class Zefir_Application_Model {
 			$this->setOptions($options);
 	    }
 	    
+	    //if there is id given retrieve data from the db and populate the model
 	    if ($id != null)
 	    {
 	    	$row = $this->getDbTable()->find($id)->current();

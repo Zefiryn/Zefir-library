@@ -11,6 +11,8 @@ class Zefir_Controller_Action extends Zend_Controller_Action
 	protected $_role;
 	protected $_cache;
 	protected $_log = NULL;
+	protected $pqprofiler;
+	
 	/**
 	 * init function
 	 * @access public
@@ -49,10 +51,36 @@ class Zefir_Controller_Action extends Zend_Controller_Action
 	    	}
     	}
     	
+    	/**
+    	 * Get the url of the current page
+    	 */
     	$this->view->link = $this->_getCurrentPage();
     	
+    	/**
+    	 * Start Zend Logger
+    	 */
     	$this->_startLogger();
+    	
+    	/**
+    	 * Add Php Quick Profiler
+    	 */
+    	if ($options['pqprofiler']['enabled'] == TRUE) 
+    	{
+    		$this->pqprofiler = new Zefir_Pqp_Classes_PhpQuickProfiler(PhpQuickProfiler::getMicroTime());
+    		$this->view->headLink()->appendStylesheet($this->view->baseUrl.'css/pqp/pQp.css');
+    	}
 	}
+	
+	/**
+	 * Destructor calls pqp
+	 */
+	public function __destruct() {
+    	
+    	$options = Zend_Registry::get('options');
+    	if ($options['pqprofiler']['enabled'] && !$this->getRequest()->isXMLHttpRequest()) {
+    		$this->pqprofiler->display(Zefir_Db_Adapter_Pdo_Mysql::$queries);	
+    	}
+    }
 	
 	/**
 	 * Init logger for debugging

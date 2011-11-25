@@ -3,8 +3,8 @@
  * @package Zefir_Application_Model_DbTable
  */
 /**
- * 
  * Zend_Db_Table extension
+ * 
  * @author Zefiryn
  * @since Jan 2011
  */
@@ -80,7 +80,10 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
     	$options = Zend_Registry::get('options');
     	$this->_prefix = $options['resources']['db']['params']['prefix'];
     	$this->_name = $this->_prefix.$this->_raw_name;
-    	parent::__construct($config);
+    	
+    	if ($options['resources']['db']['adpater'] == 'PDO_MYSQL')
+		$config['db'] = new Zefir_Db_Adapter_Pdo_Mysql($options['resources']['db']['params']);
+		parent::__construct($config);
   	}
 
   	/**
@@ -199,6 +202,7 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 	
 	/**
 	 * Search the db for the records fitting given data
+	 * 
 	 * @access public
 	 * @param array $data
 	 * @param Zefir_Application_Model $model
@@ -209,7 +213,8 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 		$select = $this->select();
 		
 		/**
-		 * $data is an associtive array which has field name as a key and its value as value
+		 * $data is an associtive array which has 
+		 * column name as a key and column value as value
 		 * the comparison is strict 
 		 */
 		foreach($data as $field => $value)
@@ -222,16 +227,20 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 		{
 			$model->populate($row);
 
-			// Get class depenedt data
-			if (count($this->_dependentTables) > 0)
-			{
-				$this->getChildren($row, $model);
-			}
-			if (count($this->_referenceMap) > 0)
-			{
-				$this->getParents($row, $model);
-			}
-			
+			/**
+			 * Get class depenedt data
+			 * 
+			 * @deprecated
+			 
+				if (count($this->_dependentTables) > 0)
+				{
+					$this->getChildren($row, $model);
+				}
+				if (count($this->_referenceMap) > 0)
+				{
+					$this->getParents($row, $model);
+				}
+			*/ 
 			$array[] = $model;
 		}
 		return $array;
@@ -239,14 +248,14 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 	}
 	
 	/**
-	 * Create new object of a given model
+	 * Create new object from a given model
 	 * 
 	 * @param Zefir_Application_Model $model
 	 * @return Zefir_Application_Model
 	 */
-	private function _createNewModel(Zefir_Application_Model $model)
+	private function _createNewModel(Zefir_Application_Model $object)
     {
-	    $class = get_class($model);
+	    $class = get_class($object);
 	    return new $class;
     }
     
@@ -341,6 +350,8 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
     
     /**
 	 * Create image thumbnail
+	 * Although this function has nothing to do with the database it is used most commonly 
+	 * during saving process and for that reason it is defined here
 	 * 
 	 * @param Zefir_Application_Model $object
 	 * @param string $property

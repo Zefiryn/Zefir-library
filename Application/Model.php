@@ -72,6 +72,8 @@ class Zefir_Application_Model {
 	protected $_imageData = array();
 	
 	protected static $_cache;
+	
+	protected static $_tables;
 	 
 
 	/**
@@ -183,7 +185,7 @@ class Zefir_Application_Model {
 	 */
 	public function __get($name) 
 	{
-		Zefir_Pqp_Classes_Console::logSpeed('Fetching data for '.$name);
+		//Zefir_Pqp_Classes_Console::logSpeed('Fetching data for '.$name);
 		//retrieve data from parent model
     	if ($this->_isBelongsTo($name))
     	{	
@@ -206,7 +208,7 @@ class Zefir_Application_Model {
     	else
     		$return = FALSE;
     	
-    	Zefir_Pqp_Classes_Console::logSpeed('Data for '.$name. ' fetched');
+    	//Zefir_Pqp_Classes_Console::logSpeed('Data for '.$name. ' fetched');
 
     	return $return;
 	}
@@ -271,8 +273,9 @@ class Zefir_Application_Model {
 	 * @param Zend_Db_Table_Row|array $row
 	 * @return Zefir_Application_Model $this
 	 */
-	public function populate(Zend_Db_Table_Row $row)
+	public function populate($row)
 	{
+		
 		foreach ($row as $var => $value)
 		{
 			$this->$var = $value;
@@ -557,7 +560,7 @@ class Zefir_Application_Model {
 			
 			if (self::$_cache !== null)
 			{
-				$tableData = $this->_getTableFromCache($name, $association['model']);
+				$tableData = $this->_getTableFromCache($name, $association['model'], $this->getDbTable()->getTableName(), $this->getDbTable()->getPrimaryKey());
 			}
 			else 
 			{
@@ -570,12 +573,9 @@ class Zefir_Application_Model {
 				$primaryKey = $this->getDbTable()->getPrimaryKey();
 				foreach ($tableData as $row)
 				{
-					if ($row->$column == $this->$primaryKey)
-					{
-						$childModel = new $association['model'];
-						$childModel->populate($row);
-						$set[] = $childModel;
-					}
+					$childModel = new $association['model'];
+					$childModel->populate($row);
+					$set[] = $childModel;
 				}
 				
 				if (isset($association['order']))
@@ -602,23 +602,73 @@ class Zefir_Application_Model {
 	 * @param string $name
 	 * @return array
 	 */
-	protected function _getTableFromCache($name, $modelName)
+	protected function _getTableFromCache($name, $modelName, $parentName = null, $parentColumnName = null)
 	{
-		//array of cached table; each key if Db_Row
-		$tableData = self::$_cache->load($modelName);
-		
-		if (!$tableData)
-		{//load entire table data from the database and cache it
-			$tableData = array();
-			
-			$model = new $modelName;
-			$primaryKey = $model->getDbTable()->getPrimaryKey();
-			foreach($model->getDbTable()->fetchAll() as $row)
+		if (isset(self::$_tables[$modelName]))
+		{
+			if ($parentName && isset(self::$_tables[$modelName][$parentName]))
 			{
-				$tableData[$row[$primaryKey]] = $row;
+				return self::$_tables[$modelName][$parentName][$this->$parentColumnName];
 			}
+			
+			elseif ($parentName && !isset(self::$_tables[$modelName][$parentName]))
+			{
+				$tableData = $this->_fetchTableData($modelName, $parentName, $parentColumnName);
+				return self::$_tables[$modelName][$parentName][$this->$parentColumnName];
+			}
+			
+			else
+			{
+				return self::$_tables[$modelName]['data'];
+			}
+		}
+		else 
+		{	
+			//array of cached table; each key if Db_Row
+			$tableData = self::$_cache->load($modelName);
+			
+			if (!$tableData)
+			{//load entire table data from the database and cache it
+				$tableData = $this->_fetchTableData($modelName, $parentName, $parentColumnName);
+				self::$_cache->save($tableData, $modelName, array('table'));
+			}
+			self::$_tables[$modelName] = $tableData;
+		}
+		
+		if ($parentColumnName)
+		{
+			return $tableData[$parentName][$this->$parentColumnName];
+		}
+		else
+		{
+			return $tableData['data'];
+		}
+	}
+	
+	protected function _fetchTableData($modelName, $parentName = null, $parentColumnName = null, $tableData = null) 
+	{
+		$tableData = $tableData == null ? array() : $tableData;
+
+		$basic = isset($tableData['data']) ? FALSE : TRUE;
+		$addParent = $parentName == null ? FALSE : TRUE;
+		
+		$model = new $modelName;
+		$primaryKey = $model->getDbTable()->getPrimaryKey();
+		foreach($model->getDbTable()->fetchAll() as $row)
+		{
+			//add parent data
+			if ($addParent) $tableData[$parentName][$row[$parentColumnName]][] = $row;
+			
+			//add basic data
+			if ($basic) $tableData['data'][$row[$primaryKey]] = $row;
+		}
+		
+		if (self::$_cache !== null)
+		{
 			self::$_cache->save($tableData, $modelName, array('table'));
 		}
+		
+		self::$_tables[$modelName] = $tableData;
 		
 		return $tableData;
 	}

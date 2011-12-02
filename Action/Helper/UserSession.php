@@ -15,32 +15,32 @@ class Zefir_Action_Helper_UserSession extends Zend_Controller_Action_Helper_Abst
 	 * @var Zend_View
 	 */
 	protected $_view;
-	
+
 	/**
 	 * @see Zend_Controller_Action_Helper_Abstract::preDispatch()
 	 */
 	public function preDispatch()
 	{
 		$this->_setUsersRole();
-		$this->_checkUsersPrivileges();		
+		$this->_checkUsersPrivileges();
 	}
-	
+
 	/**
 	 * Get the view property of Zend_Action_Controller object
 	 * @access private
-	 * @return Zend_View an instance of Zend_View class 
+	 * @return Zend_View an instance of Zend_View class
 	 */
 	protected function _getView()
 	{
 		if (null === $this->_view)
 		{
 			$controller = $this->getActionController();
-			$this->_view = $controller->view;	
+			$this->_view = $controller->view;
 		}
 		return $this->_view;
-				
+
 	}
-	
+
 	/**
 	 * Sets user's role according to his identity
 	 * @access private
@@ -51,18 +51,18 @@ class Zefir_Action_Helper_UserSession extends Zend_Controller_Action_Helper_Abst
 		$auth = Zend_Auth::getInstance();
 		$view = $this->_getView();
 		$user = new Application_Model_Users();
-		
+
 		if (!$auth->hasIdentity())
-			$user->_role = 'guest';
+		$user->_role = 'guest';
 
-    	else
-    		$user->getUser($auth->getIdentity(), TRUE);
+		else
+		$user->getUser($auth->getIdentity(), TRUE);
 
-    	Zend_Registry::set('role', $user->_role);
-    	$view->user= $user;
-    	$view->logged = $auth->hasIdentity();
+		Zend_Registry::set('role', $user->_role);
+		$view->user= $user;
+		$view->logged = $auth->hasIdentity();
 	}
-	
+
 	/**
 	 * Check user privilege to the current action
 	 * @access private
@@ -75,19 +75,19 @@ class Zefir_Action_Helper_UserSession extends Zend_Controller_Action_Helper_Abst
 		$acl = Zend_Registry::get('acl');
 		$redirect = new Zend_Controller_Action_Helper_Redirector();
 		$request = $this->getActionController()->getRequest();
-		
+
 		if (!$acl->isAllowed($role, $request->getControllerName(), $request->getActionName())
-			&& !$auth->hasIdentity())
+		&& !$auth->hasIdentity())
 		{
 			if ($request->getActionName() != 'login')
 			{
 				//save uri which user tried to get
 				$authNamespace = new Zend_Session_Namespace('auth');
 				$options = Zend_Registry::get('options');
-				$authNamespace->redirect = 
-					str_replace($options['resources']['frontController']['baseUrl'], '/', $request->getRequestUri());				
+				$authNamespace->redirect =
+				str_replace($options['resources']['frontController']['baseUrl'], '/', $request->getRequestUri());
 				$this->getActionController()->flashMe('access_denied', 'FAILURE');
-				
+
 				//save post data
 				$request = $this->getRequest();
 				if ($request->isPost())
@@ -97,18 +97,19 @@ class Zefir_Action_Helper_UserSession extends Zend_Controller_Action_Helper_Abst
 				}
 				$redirect->gotoUrlAndExit('/auth/login');
 			}
-			else 
+			else
 			{
 				$this->getActionController()->flashMe('not_allowed', 'FAILURE');
 				$redirect->gotoUrlAndExit('/index');
 			}
 		}
 		elseif (!$acl->isAllowed($role, $request->getControllerName(), $request->getActionName())
-				&& $auth->hasIdentity())
-		{//insufficent rights
+		&& $auth->hasIdentity())
+		{
+			//insufficent rights
 			$this->getActionController()->flashMe('not_allowed', 'FAILURE');
 			$redirect->gotoUrlAndExit('/index');
 		}
-		
+
 	}
 }

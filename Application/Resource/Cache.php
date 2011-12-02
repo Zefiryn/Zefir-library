@@ -11,7 +11,7 @@
 
 class Zefir_Application_Resource_Cache extends Zend_Application_Resource_ResourceAbstract {
 
-	public function init () 
+	public function init ()
 	{
 		$options = $this->getOptions();
 		$cache = Zend_Cache::factory(
@@ -22,5 +22,5 @@ class Zefir_Application_Resource_Cache extends Zend_Application_Resource_Resourc
 		Zend_Registry::set('cache', $cache);
 		return $cache;
 	}
-	
+
 }

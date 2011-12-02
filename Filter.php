@@ -15,12 +15,13 @@ class Zefir_Filter
 	 * @return void
 	 */
 	public function __construct()
-	{}
-	
+	{
+	}
+
 	/**
 	 * Get the first character of the given string
 	 * @access public
-	 * @static 
+	 * @static
 	 * @param string $string
 	 * @param boolean $upper
 	 * @param string $encoding
@@ -28,27 +29,27 @@ class Zefir_Filter
 	 */
 	public static function getFirstLetter($string, $upper = TRUE, $encoding = 'UTF-8')
 	{
-		$end = FALSE;	
+		$end = FALSE;
 		$letters = 'abcdefghijklmnopqrstuwxyzáčďéěíňóřšťúůýžàáâãäåæçèéêëíìíîïñòóôõöùúûüýÿăąćĉċčĕęěĝğġģĥĵķĸĺĻļłńņňŏŕŗřśŝşšţťũŭŰűųŵŷýźżž';
-		
+
 		$sign = mb_substr($string, 0, 1, $encoding);
-		
+
 		if ($sign == '„')
-		{	
+		{
 			$sign = mb_substr($string, 1, 1, $encoding);
-			
+				
 		}
-		
+
 		if ($upper == TRUE)
-			return mb_strtoupper($sign, $encoding);
+		return mb_strtoupper($sign, $encoding);
 		else
-			return $sign;
+		return $sign;
 	}
 
 	/**
 	 * Get the last character of the given string
 	 * @access public
-	 * @static 
+	 * @static
 	 * @param string $string
 	 * @param boolean $upper
 	 * @param string $encoding
@@ -57,17 +58,17 @@ class Zefir_Filter
 	public static function getLastChar($string, $upper = TRUE, $encoding = 'UTF-8')
 	{
 		if ($upper == TRUE)
-			return mb_strtoupper(mb_substr($string, -1, 1, $encoding), $encoding);
+		return mb_strtoupper(mb_substr($string, -1, 1, $encoding), $encoding);
 		else
-			return mb_substr($string, -1, 1, $encoding);
+		return mb_substr($string, -1, 1, $encoding);
 	}
-	
+
 	/**
-	* CONVERTS DIACRITIC SYMBOLS TO NON-DIACRITIC ONE
-	* this function was found: http://mynthon.net/howto/-/strip-accents-romove-national-characters-replace-diacritic-chars.txt
-	* @param string $s a string in which charaters should be changed
-	* @param int $case states whether output string should change letter case or not (-1-lowercase, 0 - no change, 1-uppercase)
-	**/
+	 * CONVERTS DIACRITIC SYMBOLS TO NON-DIACRITIC ONE
+	 * this function was found: http://mynthon.net/howto/-/strip-accents-romove-national-characters-replace-diacritic-chars.txt
+	 * @param string $s a string in which charaters should be changed
+	 * @param int $case states whether output string should change letter case or not (-1-lowercase, 0 - no change, 1-uppercase)
+	 **/
 	public static function strToUrl($s, $case=0)
 	{
 		$acc =	'É	Ê	Ë	š	Ì	Í	ƒ	œ	µ	Î	Ï	ž	Ð	Ÿ	Ñ	Ò	Ó	Ô	Š	£	Õ	Ö	Œ	¥	Ø	Ž	§	À	Ù	Á	Ú	Â	Û	Ã	Ü	Ä	Ý	';
@@ -82,9 +83,9 @@ class Zefir_Filter
 		$str.=	'o	c	H	L	R	u	o	C	h	l	r	U	o	c	H	L	R	u	o	D	h	l	r	U	o	d	I	L	S	c	D	i	l	s	W	o	d	';
 		$acc.=	'Ī	Ń	Ŝ	ŵ	ù	Ē	ī	ń	ŝ	Ŷ	Ə	ú	ē	Ĭ	Ņ	Ş	ŷ	 	:	;	.	,';
 		$str.=	'I	N	S	w	u	E	i	n	s	Y	e	u	e	I	N	S	y	-	-	-	-	-';
-	
+
 		$out = str_replace(explode("\t", $acc), explode("\t", $str), $s);
-	
+
 		if($case == -1)
 		{
 			return strtolower(preg_replace('/[^a-zA-Z0-9_-]/', '', $out));
@@ -98,7 +99,7 @@ class Zefir_Filter
 			return preg_replace('/[^a-zA-Z0-9_-]/', '', $out);
 		}
 	}
-	
+
 	/**
 	 * Get the extension from the filename
 	 * @param string $name
@@ -107,13 +108,13 @@ class Zefir_Filter
 	public static function getExtension($name)
 	{
 		if (strstr($name, '.'))
-			$ext = substr($name, strrpos($name, '.')+1);
+		$ext = substr($name, strrpos($name, '.')+1);
 		else
-			$ext = '';
+		$ext = '';
 			
 		return $ext;
 	}
-	
+
 	/**
 	 * Strip bbcodes from the text
 	 * @param string $string

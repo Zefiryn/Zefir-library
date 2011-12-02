@@ -2,23 +2,23 @@
 
 /* - - - - - - - - - - - - - - - - - - - - -
 
- Title : PHP Quick Profiler Console Class
- Author : Created by Ryan Campbell
- URL : http://particletree.com/features/php-quick-profiler/
+Title : PHP Quick Profiler Console Class
+Author : Created by Ryan Campbell
+URL : http://particletree.com/features/php-quick-profiler/
 
- Last Updated : April 22, 2009
+Last Updated : April 22, 2009
 
- Description : This class serves as a wrapper around a global
- php variable, debugger_logs, that we have created.
+Description : This class serves as a wrapper around a global
+php variable, debugger_logs, that we have created.
 
 - - - - - - - - - - - - - - - - - - - - - */
 
 class Zefir_Pqp_Classes_Console {
-	
+
 	/*-----------------------------------
-	     LOG A VARIABLE TO CONSOLE
+	 LOG A VARIABLE TO CONSOLE
 	------------------------------------*/
-	
+
 	public static function log($data) {
 		$logItem = array(
 			"data" => $data,
@@ -27,11 +27,11 @@ class Zefir_Pqp_Classes_Console {
 		@$GLOBALS['debugger_logs']['console'][] = $logItem;
 		@$GLOBALS['debugger_logs']['logCount'] += 1;
 	}
-	
+
 	/*---------------------------------------------------
-	     LOG MEMORY USAGE OF VARIABLE OR ENTIRE SCRIPT
+	 LOG MEMORY USAGE OF VARIABLE OR ENTIRE SCRIPT
 	-----------------------------------------------------*/
-	
+
 	public static function logMemory($object = false, $name = 'PHP') {
 		$memory = memory_get_usage();
 		if($object) $memory = strlen(serialize($object));
@@ -44,11 +44,11 @@ class Zefir_Pqp_Classes_Console {
 		$GLOBALS['debugger_logs']['console'][] = $logItem;
 		$GLOBALS['debugger_logs']['memoryCount'] += 1;
 	}
-	
+
 	/*-----------------------------------
-	     LOG A PHP EXCEPTION OBJECT
+	 LOG A PHP EXCEPTION OBJECT
 	------------------------------------*/
-	
+
 	public static function logError($exception, $message) {
 		$logItem = array(
 			"data" => $message,
@@ -59,11 +59,11 @@ class Zefir_Pqp_Classes_Console {
 		$GLOBALS['debugger_logs']['console'][] = $logItem;
 		$GLOBALS['debugger_logs']['errorCount'] += 1;
 	}
-	
+
 	/*------------------------------------
-	     POINT IN TIME SPEED SNAPSHOT
+	 POINT IN TIME SPEED SNAPSHOT
 	-------------------------------------*/
-	
+
 	public static function logSpeed($name = 'Point in Time') {
 		$logItem = array(
 			"data" => Zefir_Pqp_Classes_PhpQuickProfiler::getMicroTime(),
@@ -73,11 +73,11 @@ class Zefir_Pqp_Classes_Console {
 		@$GLOBALS['debugger_logs']['console'][] = $logItem;
 		@$GLOBALS['debugger_logs']['speedCount'] += 1;
 	}
-	
+
 	/*-----------------------------------
-	     SET DEFAULTS & RETURN LOGS
+	 SET DEFAULTS & RETURN LOGS
 	------------------------------------*/
-	
+
 	public static function getLogs() {
 		if(!isset($GLOBALS['debugger_logs']['memoryCount'])) $GLOBALS['debugger_logs']['memoryCount'] = 0;
 		if(!isset($GLOBALS['debugger_logs']['logCount'])) $GLOBALS['debugger_logs']['logCount'] = 0;

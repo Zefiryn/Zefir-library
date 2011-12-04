@@ -638,7 +638,9 @@ class Zefir_Application_Model {
 		
 		if ($parentColumnName)
 		{
-			return $tableData[$parentName][$this->$parentColumnName];
+			$return = isset($tableData[$parentName][$this->$parentColumnName]) ?
+				$tableData[$parentName][$this->$parentColumnName] : array();
+			return $return;
 		}
 		else
 		{

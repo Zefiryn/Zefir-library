@@ -366,7 +366,7 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 	 * 
 	 * @param Zefir_Application_Model $object
 	 * @param string $property
-	 * @param sitr $dir
+	 * @param string $dir
 	 * @param string $key
 	 * @throws Zend_Exception
 	 */
@@ -375,7 +375,7 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 		//get image dimensions
 		$imagedata = @getimagesize($dir.$object->$property);
 		if(!$imagedata) {
-			throw new Zend_Exception('Nie udało się odczytać rozmiarów orginalnej fotografii.');
+			throw new Zend_Exception('Nie udało się odczytać rozmiarów orginalnej fotografii. '.$object->$property);
 		}
 
 		$oldWidth = (int)$imagedata[0];
@@ -416,10 +416,23 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 				$newWidth = $width;
 				$newHeight = $this->_setRatio($oldWidth, $width, $oldHeight); 
 			}
-			else
+			elseif ($resizeData['ratio'] == 'height')
 			{
 				$newHeight = $height;
 				$newWidth = $this->_setRatio($oldHeight, $height, $oldWidth);
+			}
+			else 
+			{
+				if ($oldHeight < $oldWidth)
+				{//image is wider than taller, save ratio according to new width
+					$newWidth = $width;
+					$newHeight = $this->_setRatio($oldWidth, $width, $oldHeight);
+				}
+				else 
+				{//image is taller than wider, save ratio according to new height
+					$newHeight = $height;
+					$newWidth = $this->_setRatio($oldHeight, $height, $oldWidth);
+				}
 			}
 		} 
 		else 

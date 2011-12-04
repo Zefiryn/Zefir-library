@@ -21,6 +21,7 @@ class Zefir_Validate_Unique extends Zend_Validate_Db_Abstract
      */
     const ERROR_USER_EXIST 	= 'userExist';
     const ERROR_EMAIL_EXIST	= 'emailExist';
+    const ERROR_RECORD_FOUND = 'recordExist';
 	
     protected $_primary;
     
@@ -37,6 +38,7 @@ class Zefir_Validate_Unique extends Zend_Validate_Db_Abstract
     	$msgTemplates = array(
     		self::ERROR_USER_EXIST => 'This name has already been taken',
     		self::ERROR_EMAIL_EXIST => 'This e-mail has already been used', 
+    		self::ERROR_RECORD_FOUND => 'This record already exists in the database',
     	);
     	
     	$this->_messageTemplates += $msgTemplates;

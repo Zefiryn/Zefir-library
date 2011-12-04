@@ -606,17 +606,18 @@ class Zefir_Application_Model {
 	{
 		if (isset(self::$_tables[$modelName]))
 		{
-			if ($parentName && isset(self::$_tables[$modelName][$parentName]))
+			if ($parentName && isset(self::$_tables[$modelName][$parentName][$this->$parentColumnName]))
 			{
 				return self::$_tables[$modelName][$parentName][$this->$parentColumnName];
 			}
 			
-			elseif ($parentName && !isset(self::$_tables[$modelName][$parentName]))
+			elseif ($parentName && !isset(self::$_tables[$modelName][$parentName][$this->$parentColumnName]))
 			{
 				$tableData = $this->_fetchTableData($modelName, $parentName, $parentColumnName);
-				return self::$_tables[$modelName][$parentName][$this->$parentColumnName];
+				$return = isset(self::$_tables[$modelName][$parentName][$this->$parentColumnName]) ? 
+					self::$_tables[$modelName][$parentName][$this->$parentColumnName] : array();
+				return $return;
 			}
-			
 			else
 			{
 				return self::$_tables[$modelName]['data'];

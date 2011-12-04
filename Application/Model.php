@@ -305,6 +305,15 @@ class Zefir_Application_Model {
 		return ($set);
 	}
 	
+	public function countAll()
+	{
+		$table = $this->getDbTable();
+		$select = $table->select()->from($table->getTableName(), array('COUNT(*) as count'));
+		$count = $table->fetchAll($select)->current();
+		
+		return $count['count'];
+	}
+	
 	/**
 	 * Compare function used with usort function
 	 * 

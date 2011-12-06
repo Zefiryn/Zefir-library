@@ -831,6 +831,51 @@ class Zefir_Application_Model {
 	{
 		return $this->getDbTable()->select()->where($condition, $value);
 	}
+	
+	public function getBy($column, $val)
+	{
+		$rowset = $this->getDbTable()->getBy($column, $val);
+		
+		if (count($rowset) == 1)
+		{
+			return $this->populate($rowset->current());
+		}
+		else
+		{
+			$set = array();
+			foreach($rowset as $row)
+			{
+				$obj = new $this;
+				$set[] = $obj->populate($row);
+			}
+			
+			return $set;
+		}
+	}
+	
+	public function find($conditions, $and = true, $strict = true)
+	{
+		$rowset = $this->getDbTable()->findData($conditions, $and, $strict);
+		
+		if (count($rowset) == 1)
+		{
+			$this->populate($rowset->current());
+			return $this;
+		}
+		elseif (count($rowset) > 1)
+		{
+			$set = array();
+			foreach($rowset as $row)
+			{
+				$obj = new $this;
+				$set[] = $obj->populate($row);
+			}
+			return $set;
+		}
+		else {
+			return $this;
+		}
+	}
 }
 
 

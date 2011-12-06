@@ -258,6 +258,14 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 		
 	}
 	
+	public function getBy($column, $val)
+	{
+		$cond = '`'.$column . '` = '. $val;
+		$select = $this->select()->where($cond);
+		
+		return $this->fetchAll($select);
+	}
+	
 	/**
 	 * Create new object from a given model
 	 * 
@@ -681,5 +689,26 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 	public function getAll($args)
 	{
 		return $this->fetchAll($args);
+	}
+	
+	public function findData($conditions, $and, $strict)
+	{
+		$select = $this->select();
+		
+		if (!is_array($conditions)) array($condifiton);
+		 
+		foreach($conditions as $column => $val)
+		{
+			if ($and)
+			{
+				$select->where($column.' = ?', $val);
+			}
+			else
+			{
+				$select->orWhere($column.' = ?', $val);
+			}
+		}
+		
+		return $this->fetchAll($select);
 	}
 }

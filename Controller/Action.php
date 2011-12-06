@@ -101,6 +101,8 @@ class Zefir_Controller_Action extends Zend_Controller_Action
 			$writer->setFormatter($formatter);
 			$logger->addWriter($writer);
 			$this->_log = $logger;
+			
+			Zend_Registry::set('log', $logger);
 		}
 	}
 	

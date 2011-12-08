@@ -392,7 +392,7 @@ class Zefir_Application_Model {
 		{
 			$cache = Zend_Registry::get('cache');
 			$cache->remove(get_class($this));
-			//$cache->clean(Zend_Cache::CLEANING_MODE_MATCHING_TAG, array('table'));
+			$cache->clean(Zend_Cache::CLEANING_MODE_MATCHING_TAG, array('table'));
 		}
 		
 		return $this->getDbTable()->save($this);
@@ -542,7 +542,9 @@ class Zefir_Application_Model {
 					$parentModel = new $association['model'];
 					$parentModel->populate($tableData[$this->$column]);
 			}
-			
+			else {
+				$parentModel = null;
+			}
 			$this->$name = $parentModel;
 			
 			return $parentModel;

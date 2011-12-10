@@ -291,7 +291,7 @@ class Zefir_Application_Model {
 	 * @param mixed $args
 	 * @return array an array of Zefir_Application_Model
 	 */
-	public function fetchAll($args = null)
+	public function fetchAll()
 	{
 		if (self::$_cache != null)
 		{
@@ -313,9 +313,22 @@ class Zefir_Application_Model {
 		
 	}
 	
-	protected function _fetchAll()
+	public function getAll($args = null)
 	{
 		$rowset = $this->getDbTable()->getAll($args);
+		$set = array();
+		foreach ($rowset as $row)
+		{
+			$object = new $this;
+			$set[] = $object->populate($row);
+		}
+		
+		return ($set);
+	}
+	
+	protected function _fetchAll()
+	{
+		$rowset = $this->getDbTable()->fetchAll();
 			
 		$set = array();
 		foreach ($rowset as $row)

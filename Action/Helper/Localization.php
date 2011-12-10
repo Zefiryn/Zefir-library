@@ -94,7 +94,7 @@ class Zefir_Action_Helper_Localization extends Zend_Controller_Action_Helper_Abs
 		if ($source == 'db')
 		{
 			$localization = new Application_Model_Localizations();
-			return ($localization->getDbTable()->isLocalization($lang));
+			return ($localization->isLocalization($lang));
 		}
 		elseif ($source == 'csv')
 		{

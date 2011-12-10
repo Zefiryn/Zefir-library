@@ -285,13 +285,35 @@ class Zefir_Application_Model {
 	}
 	
 	/**
-	 * Get an array of all data from the database
+	 * Get an array of all data from the database or cache
 	 * 
 	 * @access public
 	 * @param mixed $args
 	 * @return array an array of Zefir_Application_Model
 	 */
 	public function fetchAll($args = null)
+	{
+		if (self::$_cache != null)
+		{
+			$set = self::$_cache->load(get_class($this));
+			if ($set == null)
+			{
+				$fetched = $this->_fetchAll();
+				$set['data'] = $fetched;
+				self::$_cache->save($set, get_class($this), array('table', get_class($this)));	
+			}
+			$return = $set['data'];
+		}
+		else
+		{
+			$return = $this->_fetchAll();
+		}
+		
+		return $return;
+		
+	}
+	
+	protected function _fetchAll()
 	{
 		$rowset = $this->getDbTable()->getAll($args);
 			
@@ -392,7 +414,7 @@ class Zefir_Application_Model {
 		{
 			$cache = Zend_Registry::get('cache');
 			$cache->remove(get_class($this));
-			$cache->clean(Zend_Cache::CLEANING_MODE_MATCHING_TAG, array('table'));
+			$cache->clean(Zend_Cache::CLEANING_MODE_MATCHING_TAG, array(get_class($this)));
 		}
 		
 		return $this->getDbTable()->save($this);
@@ -568,7 +590,7 @@ class Zefir_Application_Model {
 		{
 			$association = $this->_isHasMany($name);
 			$column = $association['refColumn'];
-			
+
 			if (self::$_cache !== null)
 			{
 				$tableData = $this->_getTableFromCache($name, $association['model'], $this->getDbTable()->getTableName(), $this->getDbTable()->getPrimaryKey());
@@ -578,6 +600,7 @@ class Zefir_Application_Model {
 				$tableData = $this->_getTableFromRegistry($name, $association['model']);
 			}
 			
+			$set = array();
 			if (!isset($association['joinTable']) && !isset($association['joinModel']))
 			{
 				$set = array();
@@ -602,6 +625,7 @@ class Zefir_Application_Model {
 				 */
 				$set = $this->getDbTable()->getChild($this, $name);
 			} 
+			
 			$this->$name = $set;
 		}
 		return $set;
@@ -609,8 +633,12 @@ class Zefir_Application_Model {
 	
 	/**
 	 * Get array of rows for the related table from Zend_Cache
+	 * 
 	 * @access private
 	 * @param string $name
+	 * @param string $modelName  name of the model of related resorces
+	 * @param string $parentName name of the parent resource (the property under which it will be stored in the model)
+	 * @param string $parentColumnName name of the parent column name which has the key to find related resources
 	 * @return array
 	 */
 	protected function _getTableFromCache($name, $modelName, $parentName = null, $parentColumnName = null)
@@ -624,9 +652,16 @@ class Zefir_Application_Model {
 			
 			elseif ($parentName && !isset(self::$_tables[$modelName][$parentName][$this->$parentColumnName]))
 			{
-				$tableData = $this->_fetchTableData($modelName, $parentName, $parentColumnName);
-				$return = isset(self::$_tables[$modelName][$parentName][$this->$parentColumnName]) ? 
-					self::$_tables[$modelName][$parentName][$this->$parentColumnName] : array();
+				if (isset(self::$_tables[$modelName][$parentName]))
+				{
+					$return = array();
+				}
+				else
+				{
+					$tableData = $this->_fetchTableData($modelName, $parentName, $parentColumnName, self::$_tables[$modelName]);
+					$return = isset(self::$_tables[$modelName][$parentName][$this->$parentColumnName]) ? 
+						self::$_tables[$modelName][$parentName][$this->$parentColumnName] : array();
+				}
 				return $return;
 			}
 			else
@@ -636,13 +671,13 @@ class Zefir_Application_Model {
 		}
 		else 
 		{	
-			//array of cached table; each key if Db_Row
+			//array of cached table; each value if Db_Row
 			$tableData = self::$_cache->load($modelName);
 			
 			if (!$tableData)
 			{//load entire table data from the database and cache it
 				$tableData = $this->_fetchTableData($modelName, $parentName, $parentColumnName);
-				self::$_cache->save($tableData, $modelName, array('table'));
+				self::$_cache->save($tableData, $modelName, array('table', get_class($this), $modelName));
 			}
 			self::$_tables[$modelName] = $tableData;
 		}
@@ -659,6 +694,16 @@ class Zefir_Application_Model {
 		}
 	}
 	
+	/**
+	 * Fetch related data from the database and store it in cache
+	 * 
+	 * @access private
+	 * @param string $modelName  the name of the model of related resorces
+	 * @param string $parentName the name of the parent resource (the property under which it will be stored in the model)
+	 * @param string $parentColumnName name of the parent column name which has the key to find related resources
+	 * @param array $tableData already created table with data
+	 * @return array $tableData;
+	 */
 	protected function _fetchTableData($modelName, $parentName = null, $parentColumnName = null, $tableData = null) 
 	{
 		$tableData = $tableData == null ? array() : $tableData;
@@ -668,6 +713,9 @@ class Zefir_Application_Model {
 		
 		$model = new $modelName;
 		$primaryKey = $model->getDbTable()->getPrimaryKey();
+		
+		if ($addParent) $tableData[$parentName] = array();
+		
 		foreach($model->getDbTable()->fetchAll() as $row)
 		{
 			//add parent data
@@ -685,6 +733,26 @@ class Zefir_Application_Model {
 		self::$_tables[$modelName] = $tableData;
 		
 		return $tableData;
+	}
+	
+	protected function _createCachedTable()
+	{
+		if (self::$_cache != null)
+		{
+			$table = self::$_cache->load(get_class($this));
+			if (!$table)
+			{
+				$table['data'] = array();
+				$key = $this->getDbTable()->getPrimaryKey();
+				foreach($this->getDbTable()->fetchAll() as $obj)
+				{
+					$table['data'][$obj[$key]] = $obj; 
+				}
+			}
+			self::$_cache->save($table, get_class($this), array('table', get_class($this)));
+		}
+		
+		return $table;
 	}
 	
 	/**
@@ -714,8 +782,10 @@ class Zefir_Application_Model {
 		
 		return $tableData;
 	}
+	
 	/**
 	 * Call compare objects with order array
+	 * 
 	 * @param unknown_type $set
 	 */
 	protected function _sortChildren($a, $b)
@@ -751,7 +821,6 @@ class Zefir_Application_Model {
 	 * @param string $key
 	 * @return array|NULL $_imageData[$key] 
 	 */
-
 	public function getImageData($key)
 	{
 		if (isset($this->_imageData) && isset($this->_imageData[$key]))

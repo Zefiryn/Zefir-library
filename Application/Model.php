@@ -331,10 +331,11 @@ class Zefir_Application_Model {
 		$rowset = $this->getDbTable()->fetchAll();
 			
 		$set = array();
+		$primaryKey = $this->getDbTable()->getPrimaryKey();
 		foreach ($rowset as $row)
 		{
 			$object = new $this;
-			$set[] = $object->populate($row);
+			$set[$row->$primaryKey] = $object->populate($row);
 		}
 		
 		return ($set);
@@ -574,11 +575,11 @@ class Zefir_Application_Model {
 			
 			if (isset($tableData[$this->$column]))
 			{
-					$parentModel = new $association['model'];
-					$parentModel->populate($tableData[$this->$column]);
+					$parentModel = $tableData[$this->$column];
 			}
-			else {
-				$parentModel = null;
+			else 
+			{
+				$parentModel = new $association['model'];
 			}
 			$this->$name = $parentModel;
 			
@@ -679,6 +680,7 @@ class Zefir_Application_Model {
 			}
 			else
 			{
+				
 				return self::$_tables[$modelName]['data'];
 			}
 		}
@@ -728,14 +730,17 @@ class Zefir_Application_Model {
 		$primaryKey = $model->getDbTable()->getPrimaryKey();
 		
 		if ($addParent) $tableData[$parentName] = array();
+		Zefir_Pqp_Classes_Console::log($primaryKey);
 		
 		foreach($model->getDbTable()->fetchAll() as $row)
 		{
+			$obj = new $modelName;
+			$obj->populate($row);
 			//add parent data
-			if ($addParent) $tableData[$parentName][$row[$parentColumnName]][] = $row;
+			if ($addParent) $tableData[$parentName][$obj->$parentColumnName][] = $obj;
 			
 			//add basic data
-			if ($basic) $tableData['data'][$row[$primaryKey]] = $row;
+			if ($basic) $tableData['data'][$obj->$primaryKey] = $obj;
 		}
 		
 		if (self::$_cache !== null)

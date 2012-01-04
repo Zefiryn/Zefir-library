@@ -21,65 +21,66 @@ class Zefir_Controller_Action extends Zend_Controller_Action
 	public function init()
 	{
 		/**
-    	 * set the base url for path in the view
-    	 */
-    	$options = Zend_Registry::get('options');
-    	$this->view->baseUrl = $options['resources']['frontController']['baseUrl'];
+		* set the base url for path in the view
+		*/
+		
+		$options = Zend_Registry::get('options');
+		$this->view->baseUrl = $options['resources']['frontController']['baseUrl'];
 
-    	/**
-    	 * Check if there is any post data in session from redirect from login
-    	 */
-    	if ($this->getRequest()->getActionName() != 'login')
-    	{
-	    	$postSession = Zend_Session::namespaceGet('post');
-	    	if (isset($postSession['post']) && $postSession['post'] != NULL)
-	    	{
-	    		foreach($postSession['post'] as $key => $value)
+		/**
+		* Check if there is any post data in session from redirect from login
+		*/
+		if ($this->getRequest()->getActionName() != 'login')
+		{
+			$postSession = Zend_Session::namespaceGet('post');
+			if (isset($postSession['post']) && $postSession['post'] != NULL)
+			{
+				foreach($postSession['post'] as $key => $value)
 					$_POST[$key] = $value;
-	    	}	
-    	}
-    	
-    	/**
-    	 * Run cache if there is one
-    	 */
-    	if (Zend_Registry::isRegistered('cache'))
-    	{
-	    	$cache = Zend_Registry::get('cache');
-	    	if ($cache)
-	    	{
-	    		$this->_cache = $cache;
-	    	}
-    	}
-    	
-    	/**
-    	 * Get the url of the current page
-    	 */
-    	$this->view->link = $this->_getCurrentPage();
-    	
-    	/**
-    	 * Start Zend Logger
-    	 */
-    	$this->_startLogger();
-    	
-    	/**
-    	 * Add Php Quick Profiler
-    	 */
-    	if ($options['pqprofiler']['enabled'] == TRUE) 
-    	{
-    		$this->pqprofiler = new Zefir_Pqp_Classes_PhpQuickProfiler(Zefir_Pqp_Classes_PhpQuickProfiler::getMicroTime());
-    		$this->view->headLink()->appendStylesheet($this->view->baseUrl.'css/pqp/pQp.css');
-    	}
+			}	
+		}
+		
+		/**
+		 * Run cache if there is one
+		 */
+		if (Zend_Registry::isRegistered('cache'))
+		{
+			$cache = Zend_Registry::get('cache');
+			if ($cache)
+			{
+				$this->_cache = $cache;
+			}
+		}
+		
+		/**
+		 * Get the url of the current page
+		 */
+		$this->view->link = $this->_getCurrentPage();
+		
+		/**
+		 * Start Zend Logger
+		 */
+		$this->_startLogger();
+		
+		/**
+		 * Add Php Quick Profiler
+		 */
+		if ($options['pqprofiler']['enabled'] == TRUE) 
+		{
+			$this->pqprofiler = new Zefir_Pqp_Classes_PhpQuickProfiler(Zefir_Pqp_Classes_PhpQuickProfiler::getMicroTime());
+			$this->view->headLink()->appendStylesheet($this->view->baseUrl.'css/pqp/pQp.css');
+		}
 	}
 	
 	/**
 	 * Destructor calls pqp
 	 */
 	public function __destruct() {
-    	
-    	$options = Zend_Registry::get('options');
-    	if ($options['pqprofiler']['enabled'] && !$this->getRequest()->isXMLHttpRequest()) {
-    		$this->pqprofiler->display(Zend_Registry::get('adapter'));	
-    	}
+		
+		$options = Zend_Registry::get('options');
+		if ($options['pqprofiler']['enabled'] && !$this->getRequest()->isXMLHttpRequest()) {
+			$this->pqprofiler->display(Zend_Registry::get('adapter'));	
+		}
     }
 	
 	/**
@@ -197,7 +198,7 @@ class Zefir_Controller_Action extends Zend_Controller_Action
      */
     protected function _cacheFile($cache_folder, $form, $element)
     {
-    	//get the file element
+		//get the file element
 		$upload = $form->getElement($element);
 
 		if(count($upload->getErrors()) == 0 && !is_array($upload->getFileName()))
@@ -235,8 +236,8 @@ class Zefir_Controller_Action extends Zend_Controller_Action
      */
     protected function _removeOldCache($dir, $file)
     {
-    	if (is_file($dir.$file))
-    		unlink($dir.$file);
+		if (is_file($dir.$file))
+			unlink($dir.$file);
     }
     
     /**
@@ -249,7 +250,7 @@ class Zefir_Controller_Action extends Zend_Controller_Action
      */
     protected function _redirectToRoute($options, $route)
     {
-    	$this->_redirector = $this->_helper->getHelper('Redirector');
+		$this->_redirector = $this->_helper->getHelper('Redirector');
 		$this->_redirector->gotoRoute($options, $route);
     }
     
@@ -263,10 +264,10 @@ class Zefir_Controller_Action extends Zend_Controller_Action
      */
 	protected function _checkFileCache(Zefir_Form $form, $field)
     {
-    	$request = $this->getRequest();
-    	$options = Zend_Registry::get('options');
-    	
-    	$fileCache = $request->getParam($field.'Cache', '');
+		$request = $this->getRequest();
+		$options = Zend_Registry::get('options');
+		
+		$fileCache = $request->getParam($field.'Cache', '');
 		$filePath = APPLICATION_PATH.'/../public/assets/'.$fileCache;
 
 		if ($fileCache != null	&& file_exists($filePath))
@@ -279,20 +280,20 @@ class Zefir_Controller_Action extends Zend_Controller_Action
     
     protected function _clearCache(Zend_Form $form)
     {
-    	$elements = $form->getElements();
-    	
-    	foreach($elements as $element)
-    	{
-    		if (strstr($element->getName(), 'Cache'))
-    		{
-    			$file = $element->getValue();
-    			if ($file)
-    			{
-    				$path = APPLICATION_PATH.'/../public/assets/'.$file;
-    				@unlink($path);
-    			}
-    		}
-    	}
+		$elements = $form->getElements();
+		
+		foreach($elements as $element)
+		{
+			if (strstr($element->getName(), 'Cache'))
+			{
+				$file = $element->getValue();
+				if ($file)
+				{
+					$path = APPLICATION_PATH.'/../public/assets/'.$file;
+					@unlink($path);
+				}
+			}
+		}
     }
     
     /**
@@ -300,10 +301,10 @@ class Zefir_Controller_Action extends Zend_Controller_Action
      */
     protected function _getRole()
     {
-    	if ($this->_role == null)
-    		$this->_role = Zend_Registry::get('role');
-    	
-    	return $this->_role;    	
+		if ($this->_role == null)
+			$this->_role = Zend_Registry::get('role');
+		
+		return $this->_role;		
     }
     
     /**
@@ -311,7 +312,7 @@ class Zefir_Controller_Action extends Zend_Controller_Action
      */
     protected function _isAdmin()
     {
-    	return $this->_getRole() == 'admin';
+		return $this->_getRole() == 'admin';
     }
     
     /**
@@ -321,7 +322,7 @@ class Zefir_Controller_Action extends Zend_Controller_Action
      */
     protected function _clearZendCache($tags)
     {
-    	$cache = Zend_Registry::get('cache');
+		$cache = Zend_Registry::get('cache');
 		$cache->clean(
 			Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
 			$tags

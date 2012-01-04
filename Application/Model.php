@@ -43,7 +43,7 @@ class Zefir_Application_Model {
 	 * @var string
 	 */
 	protected $_fetchingChildren = null;
-     
+	
 	/**
 	 * Setup model to handle image attachments
 	 * $_image stores basic data about the attachment and it should look like this 
@@ -87,37 +87,37 @@ class Zefir_Application_Model {
 	 */
 	public function __construct($id = NULL, $options = NULL) 
 	{
-	    if ( null != $this->_dbTableModelName ) 
-	    {
+		if ( null != $this->_dbTableModelName ) 
+		{
 			$this->setDbTable($this->_dbTableModelName);
-	    }
-	    else 
-	    {
-	    	if (FALSE == $this->_externalModel)
+		}
+		else 
+		{
+			if (FALSE == $this->_externalModel)
 				throw new Exception('Invalid table data gateway provided');
-	    }
-	    
+		}
+		
 		if (is_array($options)) 
-	    {
+		{
 			$this->setOptions($options);
-	    }
-	    
-	    //if there is id given retrieve data from the db and populate the model
-	    if ($id != null)
-	    {
-	    	$row = $this->getDbTable()->find($id)->current();
+		}
+		
+		//if there is id given retrieve data from the db and populate the model
+		if ($id != null)
+		{
+			$row = $this->getDbTable()->find($id)->current();
 
-	    	if ($row)
-	    		$this->populate($row);	
-	    }
-	    
-	    
-	    if (!self::$_cache !== null && Zend_Registry::isRegistered('cache')) 
-	    {
-	    	self::$_cache = Zend_Registry::get('cache');
-	    }
-	    
-	    return $this;
+			if ($row)
+				$this->populate($row);	
+		}
+		
+		
+		if (!self::$_cache !== null && Zend_Registry::isRegistered('cache')) 
+		{
+			self::$_cache = Zend_Registry::get('cache');
+		}
+		
+		return $this;
 	}
 	
 	
@@ -131,16 +131,16 @@ class Zefir_Application_Model {
 	 */
 	public function setDbTable($dbTable) 
 	{
-	    if (is_string($dbTable)) 
-	    {
+		if (is_string($dbTable)) 
+		{
 			$dbTable = new $dbTable();
-	    }
-	    if (!$dbTable instanceof Zend_Db_Table_Abstract) 
-	    {
+		}
+		if (!$dbTable instanceof Zend_Db_Table_Abstract) 
+		{
 			throw new Exception('Invalid table data gateway provided');
-	    }
-	    $this->_dbTable = $dbTable;
-	    return $this;
+		}
+		$this->_dbTable = $dbTable;
+		return $this;
 	}
 	 
 	/**
@@ -151,11 +151,11 @@ class Zefir_Application_Model {
 	 */
 	public function getDbTable() 
 	{
-	    if (null === $this->_dbTable) 
-	    {
+		if (null === $this->_dbTable) 
+		{
 			$this->setDbTable($this->_dbTableModelName);
-	    }
-	    return $this->_dbTable;
+		}
+		return $this->_dbTable;
 	}
  
 	/**
@@ -170,7 +170,7 @@ class Zefir_Application_Model {
 	{
 		if (property_exists($this, $name))
 		{
-	    	$this->$name = $value;
+			$this->$name = $value;
 		}
 		
 		return $this;
@@ -187,30 +187,30 @@ class Zefir_Application_Model {
 	{
 		//Zefir_Pqp_Classes_Console::logSpeed('Fetching data for '.$name);
 		//retrieve data from parent model
-    	if ($this->_isBelongsTo($name))
-    	{	
-    		$return = $this->_getParent($name);
-    	}
-    	
-    	//retrieve data from child model
-    	elseif ($this->_isHasMany($name))
-    	{
-    		$return = $this->_getChild($name);
-    	}
-    	
-    	//return the property itself
-    	elseif (property_exists($this, $name))
-    	{
-	    	$return = $this->$name;
-    	}
-    	
-    	//return FALSE if property doesn't exist in this model
-    	else
-    		$return = FALSE;
-    	
-    	//Zefir_Pqp_Classes_Console::logSpeed('Data for '.$name. ' fetched');
+		if ($this->_isBelongsTo($name))
+		{	
+			$return = $this->_getParent($name);
+		}
+		
+		//retrieve data from child model
+		elseif ($this->_isHasMany($name))
+		{
+			$return = $this->_getChild($name);
+		}
+		
+		//return the property itself
+		elseif (property_exists($this, $name))
+		{
+			$return = $this->$name;
+		}
+		
+		//return FALSE if property doesn't exist in this model
+		else
+			$return = FALSE;
+		
+		//Zefir_Pqp_Classes_Console::logSpeed('Data for '.$name. ' fetched');
 
-    	return $return;
+		return $return;
 	}
 	
 	/**
@@ -240,13 +240,13 @@ class Zefir_Application_Model {
 	 */
 	public function setOptions(array $options) 
 	{
-	    foreach ($options as $key => $value) 
-	    {
-	    	$var = '_'.$key;
-	    	if (property_exists($this, $var))
+		foreach ($options as $key => $value) 
+		{
+			$var = '_'.$key;
+			if (property_exists($this, $var))
 				$this->$var = $value;
-	    }
-	    return $this;
+		}
+		return $this;
 	}
 		   
 	/**
@@ -258,7 +258,7 @@ class Zefir_Application_Model {
 	public function toArray() 
 	{
 	 	   
-    	return get_object_vars($this);
+		return get_object_vars($this);
 	}
 	
 	public function prepareFormArray()
@@ -787,6 +787,15 @@ class Zefir_Application_Model {
 		return $tableData;
 	}
 	
+	/**
+	 * Get an array of objects associated with current model
+	 * 
+	 * @access private
+	 * @param string $modelName name of the model of related objects
+	 * @param string $parentName name of the model for which data has to be created 
+	 * @param int $parentId id of the object
+	 * @return array $set an array of related objects
+	 */
 	protected function _retrieveParentChildren($modelName, $parentName, $parentId)
 	{
 		$set = array();
@@ -799,6 +808,12 @@ class Zefir_Application_Model {
 		return $set;
 	}
 	
+	/**
+	 * Fetch all data of this class from the database and store it in cache
+	 * 
+	 * @access private
+	 * @return array|false return array of objects or false if cache is disabled
+	 */
 	protected function _createCachedTable()
 	{
 		if (self::$_cache != null)
@@ -814,15 +829,20 @@ class Zefir_Application_Model {
 				}
 			}
 			self::$_cache->save($table, get_class($this), array('table', get_class($this)));
+			
+			return $table;
 		}
 		
-		return $table;
+		return false;
 	}
 	
 	/**
 	 * Call compare objects with order array
 	 * 
-	 * @param unknown_type $set
+	 * @access private
+	 * @param  object $a
+	 * @param  object $b
+	 * @return boolean
 	 */
 	protected function _sortChildren($a, $b)
 	{
@@ -850,7 +870,7 @@ class Zefir_Application_Model {
 		return $this->_compareObjects($a, $b, $order, $direction);
 	}
 	
-	/*
+	/**
 	 * Get data about specified thumbnail
 	 * 
 	 * @access public
@@ -924,6 +944,13 @@ class Zefir_Application_Model {
 		return FALSE;
 	}
 	
+	/**
+	* Add order to Zend_Db_Select statement
+	*
+	* @access public
+	* @param string $string
+	* @return Zend_Db_Select
+	*/
 	public function order($string) 
 	{
 		if (strstr($string, 'ASC') || strstr($string, 'DESC')) 
@@ -934,11 +961,27 @@ class Zefir_Application_Model {
 		return $this->getDbTable()->select()->order($string);
 	}
 	
+	/**
+	 * Add where to Zend_Db_Select statement
+	 * 
+	 * @access public
+	 * @param mixed $condition
+	 * @param mixed $value
+	 * @return Zend_Db_Select
+	 */
 	public function where($condition, $value) 
 	{
 		return $this->getDbTable()->select()->where($condition, $value);
 	}
 	
+	/**
+	 * Perform search in the database according to the sepcified column 
+	 * 
+	 * @access public
+	 * @param string $column column name
+	 * @param mixed $val column value
+	 * @return Zefir_Application_Model|array
+	 */
 	public function getBy($column, $val)
 	{
 		$rowset = $this->getDbTable()->getBy($column, $val);
@@ -960,6 +1003,15 @@ class Zefir_Application_Model {
 		}
 	}
 	
+	/**
+	 * Perform search in the database and return the object or an array of object matching criteria
+	 * 
+	 * @access public
+	 * @param array $conditions an array of conditions 
+	 * @param boolean $and whether all criteria has to be met or at least one of them  
+	 * @param boolean $strict use strict comparison
+	 * @return Zefir_Application_Model|array
+	 */
 	public function find($conditions, $and = true, $strict = true)
 	{
 		$rowset = $this->getDbTable()->findData($conditions, $and, $strict);

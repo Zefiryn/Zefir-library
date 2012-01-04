@@ -44,12 +44,12 @@ class Zefir_Application_Model {
 	 */
 	protected $_fetchingChildren = null;
      
-	/*
+	/**
 	 * Setup model to handle image attachments
 	 * $_image stores basic data about the attachment and it should look like this 
 	 * array(
 	 * 		'property' => model property where image name is stored 
-	 * 		' dir' => directory in which the file is saved 
+	 * 		'dir' => directory in which the file is saved 
 	 * );
 	 * @var array
 	 */
@@ -57,7 +57,7 @@ class Zefir_Application_Model {
 	
 	/**
 	 * Setup model to handle image attachments
-	 * $_imageData include information about miniatures that are can be created
+	 * $_imageData include information about miniatures that can be created
 	 * $_imageData is an array of arrays that look like this:
 	 * array(
 	 * 		'thumbName' => array(
@@ -449,6 +449,26 @@ class Zefir_Application_Model {
 			//$cache->clean(Zend_Cache::CLEANING_MODE_MATCHING_TAG, array('table'));
 		}
 		$this->getDbTable()->delete($this);
+		if (count($this->_image) > 0 )
+		{
+			if (file_exists($this->_getFileFolder().$this->path))
+			{
+				unlink($this->_getFileFolder().$this->path);
+			}
+				
+			foreach($this->_imageData as $key => $data)
+			{
+				if (file_exists($this->_getFileFolder().$this->getImage($key)))
+				{
+					unlink($this->_getFileFolder().$this->getImage($key));
+				}
+			}
+		}
+	}
+	
+	protected function _getFileFolder()
+	{
+		return APPLICATION_PATH.'/../public'.$this->_image['dir'].'/';
 	}
 	
 	/**
@@ -564,14 +584,7 @@ class Zefir_Application_Model {
 			$refColumn = $association['column'];
 			$column = $association['refColumn'];
 			
-			if (self::$_cache !== null)
-			{
-				$tableData = $this->_getTableFromCache($name, $association['model']);
-			}
-			else 
-			{
-				$tableData = $this->_getTableFromRegistry($name, $association['model']);
-			}
+			$tableData = $this->_getTable($association);
 			
 			if (isset($tableData[$this->$column]))
 			{
@@ -603,42 +616,16 @@ class Zefir_Application_Model {
 		else
 		{
 			$association = $this->_isHasMany($name);
-			$column = $association['refColumn'];
+			//$column = $association['refColumn'];
 
-			if (self::$_cache !== null)
-			{
-				$tableData = $this->_getTableFromCache($name, $association['model'], $this->getDbTable()->getTableName(), $this->getDbTable()->getPrimaryKey());
-			}
-			else 
-			{
-				$tableData = $this->_getTableFromRegistry($name, $association['model']);
-			}
+			$tableData = $this->_getTable($association, $this->getDbTable()->getTableName(), $this->getDbTable()->getPrimaryKey());
 			
-			$set = array();
-			if (!isset($association['joinTable']) && !isset($association['joinModel']))
+			$set = $tableData;
+			if (isset($association['order']))
 			{
-				$set = array();
-				$primaryKey = $this->getDbTable()->getPrimaryKey();
-				foreach ($tableData as $row)
-				{
-					$childModel = new $association['model'];
-					$childModel->populate($row);
-					$set[] = $childModel;
-				}
-				
-				if (isset($association['order']))
-				{
-					$this->_fetchingChildren = $name; 	
-					usort($set, array($this, '_sortChildren'));
-				}
+				$this->_fetchingChildren = $name; 	
+				usort($set, array($this, '_sortChildren'));
 			}
-			else 
-			{
-				/**
-				 * @todo add loops for data in others table
-				 */
-				$set = $this->getDbTable()->getChild($this, $name);
-			} 
 			
 			$this->$name = $set;
 		}
@@ -646,67 +633,99 @@ class Zefir_Application_Model {
 	}
 	
 	/**
-	 * Get array of rows for the related table from Zend_Cache
+	 * Get array of objects for the related table from Zend_Cache
 	 * 
 	 * @access private
-	 * @param string $name
-	 * @param string $modelName  name of the model of related resorces
+	 * @param string $association association data
 	 * @param string $parentName name of the parent resource (the property under which it will be stored in the model)
 	 * @param string $parentColumnName name of the parent column name which has the key to find related resources
 	 * @return array
 	 */
-	protected function _getTableFromCache($name, $modelName, $parentName = null, $parentColumnName = null)
+	protected function _getTable($association, $parentName = null, $parentColumnName = null)
 	{
-		if (isset(self::$_tables[$modelName]))
+		$modelName = $association['model'];
+		//if no data in $_tables property, get them from cache of fetch
+		if (!isset(self::$_tables[$modelName]))
 		{
-			if ($parentName && isset(self::$_tables[$modelName][$parentName][$this->$parentColumnName]))
-			{
-				return self::$_tables[$modelName][$parentName][$this->$parentColumnName];
-			}
-			
-			elseif ($parentName && !isset(self::$_tables[$modelName][$parentName][$this->$parentColumnName]))
-			{
-				if (isset(self::$_tables[$modelName][$parentName]))
-				{
-					$return = array();
-				}
-				else
-				{
-					$tableData = $this->_fetchTableData($modelName, $parentName, $parentColumnName, self::$_tables[$modelName]);
-					$return = isset(self::$_tables[$modelName][$parentName][$this->$parentColumnName]) ? 
-						self::$_tables[$modelName][$parentName][$this->$parentColumnName] : array();
-				}
-				return $return;
-			}
-			else
-			{
-				
-				return self::$_tables[$modelName]['data'];
-			}
-		}
-		else 
-		{	
 			//array of cached table; each value if Db_Row
-			$tableData = self::$_cache->load($modelName);
-			
-			if (!$tableData)
-			{//load entire table data from the database and cache it
-				$tableData = $this->_fetchTableData($modelName, $parentName, $parentColumnName);
-				self::$_cache->save($tableData, $modelName, array('table', get_class($this), $modelName));
+			if (self::$_cache) 
+			{
+				$tableData = self::$_cache->load($modelName);
+			}
+				
+			if (!isset($tableData) || !$tableData)
+			{
+				//load entire table data from the database
+				$tableData = $this->_fetchTableData($modelName, $parentName, $parentColumnName, null, $association);
+				
+				//cache data
+				if (self::$_cache)
+				{
+					self::$_cache->save($tableData, $modelName, array('table', get_class($this), $modelName));
+				}
 			}
 			self::$_tables[$modelName] = $tableData;
 		}
 		
-		if ($parentColumnName)
-		{
-			$return = isset($tableData[$parentName][$this->$parentColumnName]) ?
-				$tableData[$parentName][$this->$parentColumnName] : array();
+		
+		if ($parentName && isset(self::$_tables[$modelName][$parentName][$this->$parentColumnName]))
+		{//cache has needed data, just retrievie it
+			
+			return $this->_retrieveParentChildren($modelName, $parentName, $this->$parentColumnName);
+		}
+		
+		elseif ($parentName && !isset(self::$_tables[$modelName][$parentName][$this->$parentColumnName]))
+		{//no needed data found
+			
+			if (isset(self::$_tables[$modelName][$parentName]))
+			{//no data in the database
+				$return = array();
+			}
+			else
+			{//fetch data from the database
+				
+				$tableData = $this->_fetchTableData($modelName, $parentName, $parentColumnName, self::$_tables[$modelName]);
+				
+				//get data if there are any
+				$return = isset(self::$_tables[$modelName][$parentName][$this->$parentColumnName]) ? 
+					$this->_retrieveParentChildren($modelName, $parentName, $this->$parentColumnName) : array();
+			}
 			return $return;
 		}
 		else
-		{
-			return $tableData['data'];
+		{//basic data				
+			return self::$_tables[$modelName]['data'];
 		}
+	}
+		
+	/**
+	 * Get associations for many-to-many using join table
+	 * 
+	 * @param array $association an array of association data to retrieve
+	 * @return array $schema an array to use with self::$_tables
+	 */
+	protected function _retrieveJoinSchema($association)
+	{
+		if ($association['joinModel']) 
+		{
+			$joinModel = new $association['joinModel']();
+			$rowset = $joinModel->getDbTable()->fetchAll();
+		}
+		else
+		{
+			$rowset = $this->getDbTable()->fetchAllFrom($association['joinTable']);
+		}
+		
+		$tableName = $this->getDbTable()->getTableName();
+		$modelRefColumn = $association['refColumn'];
+		$childRefColumn = $association['joinRefColumn'];
+		$schema = array();
+		foreach($rowset as $row)
+		{
+			$schema[$tableName][$row->$modelRefColumn][] = $row->childRefColumn;
+		}
+		
+		return $schema;
 	}
 	
 	/**
@@ -717,32 +736,47 @@ class Zefir_Application_Model {
 	 * @param string $parentName the name of the parent resource (the property under which it will be stored in the model)
 	 * @param string $parentColumnName name of the parent column name which has the key to find related resources
 	 * @param array $tableData already created table with data
+	 * @param array $association an association data array if the related parent is from many-to-many relation
 	 * @return array $tableData;
 	 */
-	protected function _fetchTableData($modelName, $parentName = null, $parentColumnName = null, $tableData = null) 
+	protected function _fetchTableData($modelName, $parentName = null, $parentColumnName = null, $tableData = null, $association = array()) 
 	{
 		$tableData = $tableData == null ? array() : $tableData;
 
 		$basic = isset($tableData['data']) ? FALSE : TRUE;
 		$addParent = $parentName == null ? FALSE : TRUE;
+		$join = (isset($association['joinModel']) || isset($association['joinTable']));
 		
 		$model = new $modelName;
 		$primaryKey = $model->getDbTable()->getPrimaryKey();
 		
-		if ($addParent) $tableData[$parentName] = array();
-		Zefir_Pqp_Classes_Console::log($primaryKey);
+		if ($addParent && !$join) 
+		{
+			$tableData[$parentName] = array();
+		}
+		elseif ($addParent && $join)
+		{//add many-to-many schema
+			$tableData += $this->_retrieveJoinSchema($association);
+		}
 		
 		foreach($model->getDbTable()->fetchAll() as $row)
 		{
 			$obj = new $modelName;
 			$obj->populate($row);
 			//add parent data
-			if ($addParent) $tableData[$parentName][$obj->$parentColumnName][] = $obj;
+			if ($addParent && !$join) 
+			{
+				$tableData[$parentName][$obj->$parentColumnName][] = $obj->$primaryKey;
+			}
 			
 			//add basic data
-			if ($basic) $tableData['data'][$obj->$primaryKey] = $obj;
+			if ($basic) 
+			{
+				$tableData['data'][$obj->$primaryKey] = $obj;
+			}
 		}
 		
+		//save new results
 		if (self::$_cache !== null)
 		{
 			self::$_cache->save($tableData, $modelName, array('table'));
@@ -751,6 +785,18 @@ class Zefir_Application_Model {
 		self::$_tables[$modelName] = $tableData;
 		
 		return $tableData;
+	}
+	
+	protected function _retrieveParentChildren($modelName, $parentName, $parentId)
+	{
+		$set = array();
+		$objects = self::$_tables[$modelName]['data'];
+		foreach(self::$_tables[$modelName][$parentName][$parentId] as $id)
+		{
+			$set[] = $objects[$id];
+		}
+		
+		return $set;
 	}
 	
 	protected function _createCachedTable()
@@ -771,34 +817,6 @@ class Zefir_Application_Model {
 		}
 		
 		return $table;
-	}
-	
-	/**
-	 * Get parent model from Zend_Registry or from the database
-	 * @access private
-	 * @param string $name
-	 * @return array
-	 */
-	protected function _getTableFromRegistry($name, $modelName)
-	{
-		$association = $this->_isBelongsTo($name);
-		if (!Zend_Registry::isRegistered($modelName))
-		{//load data to registry
-			$model = new $modelName;
-			$primaryKey = $model->getDbTable()->getPrimaryKey();
-			foreach($model->getDbTable()->fetchAll() as $row)
-			{
-				
-				$tableData[$row->$primaryKey] = $row;
-			}
-			Zend_Registry::set($modelName, $tableData);
-		}
-		else
-		{
-			$tableData = Zend_Registry::get($modelName);
-		}
-		
-		return $tableData;
 	}
 	
 	/**
@@ -964,6 +982,34 @@ class Zefir_Application_Model {
 		else {
 			return $this;
 		}
+	}
+	
+	/**
+	* Save message in a log
+	*
+	* @access private
+	* @param mixed $message
+	* @return void
+	*/
+	protected function _log($message)
+	{
+		$log = Zend_Registry::get('log');
+		if (is_bool($message) || is_null($message)) {
+			$message = var_export($message, true);
+		} else {
+			$message = print_r($message, true);
+		}
+	
+		if ($log)
+		{
+			$log->log($message, Zend_Log::DEBUG);
+		}
+	
+	}
+	
+	public function logCache()
+	{
+		$this->_log(self::$_tables);
 	}
 }
 

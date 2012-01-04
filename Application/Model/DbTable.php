@@ -210,7 +210,6 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 		return $set;
 	}
 	
-	
 	/**
 	 * Search the db for the records fitting given data
 	 * 
@@ -708,6 +707,13 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 				$select->orWhere($column.' = ?', $val);
 			}
 		}
+		
+		return $this->fetchAll($select);
+	}
+	
+	public function fetchAllFrom($table)
+	{
+		$select = $this->select()->setIntegrityCheck(false)->from($table);
 		
 		return $this->fetchAll($select);
 	}

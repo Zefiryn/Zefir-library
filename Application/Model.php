@@ -45,6 +45,11 @@ class Zefir_Application_Model {
 	protected $_fetchingChildren = null;
 	
 	/**
+	 * @var array
+	 */
+	protected $_with = array();
+	
+	/**
 	 * Setup model to handle image attachments
 	 * $_image stores basic data about the attachment and it should look like this 
 	 * array(
@@ -156,6 +161,16 @@ class Zefir_Application_Model {
 			$this->setDbTable($this->_dbTableModelName);
 		}
 		return $this->_dbTable;
+	}
+	
+	public function getTableName()
+	{
+		return $this->getDbTable()->getTableName();
+	}
+	
+	public function getPrimaryKey()
+	{
+		return $this->getDbTable()->getPrimaryKey();
 	}
  
 	/**
@@ -275,15 +290,37 @@ class Zefir_Application_Model {
 	 */
 	public function populate($row)
 	{
+		$properties = array_keys(get_object_vars($this));
 		
-		foreach ($row as $var => $value)
+		$row = (is_array($row)) ? $row : $row->toArray();
+		
+		foreach($properties as $property)
 		{
-			$this->$var = $value;
+			if (isset($row[$property]))
+				$this->$property = $row[$property];
+			
 		}
-
 		return $this;
 	}
 	
+	/**
+	 * Add children name that will be fetch when data from the database are received
+	 * 
+	 * @access public
+	 * @param string|array $name name or array of name that will be fetched with the resource
+	 * @return Zefir_Application_Model $this
+	 */
+	public function with($names)
+	{
+		if (!is_array($names))
+		{
+			$names = array($names);
+		}
+		
+		$this->_with += array_diff($names, $this->_with);
+		
+		return $this;
+	}
 	/**
 	 * Get an array of all data from the database or cache
 	 * 
@@ -313,6 +350,13 @@ class Zefir_Application_Model {
 		
 	}
 	
+	/**
+	 * Get all data accroding to specified arguments
+	 * 
+	 * @access public
+	 * @param mixed $args
+	 * @return array $set
+	 */
 	public function getAll($args = null)
 	{
 		$rowset = $this->getDbTable()->getAll($args);
@@ -326,10 +370,51 @@ class Zefir_Application_Model {
 		return ($set);
 	}
 	
+	/**
+	 * Add child data to the current object
+	 * 
+	 * @access public
+	 * @param string $name the name of the child resource
+	 * @param Zefir_Application_Model $object the children/parent object
+	 * @return Zefir_Application_Model $this
+	 */
+	public function addChild($object, $name)
+	{
+		$id = $object->getPrimaryKey();
+		if ($this->_isBelongsTo($name))
+		{
+			$this->$name = $object;
+		}
+		else
+		{
+			$children = $this->$name;
+			if (!is_array($children))
+			{
+				$children = array();
+			}
+			
+			$oid = $object->$id;
+			if($oid != null && !isset($children[$oid]))
+			{
+				$children[$oid] = $object;
+				$this->$name = $children;
+			}
+			else
+			{
+				$children[] = $object;
+				$this->$name = $children;
+			}
+		}
+		
+		return $this;
+	}
+	
 	protected function _fetchAll()
 	{
 		$rowset = $this->getDbTable()->fetchAll();
-			
+
+		$this->_retrieveFetchedData($rowset);
+		
 		$set = array();
 		$primaryKey = $this->getDbTable()->getPrimaryKey();
 		foreach ($rowset as $row)
@@ -339,6 +424,25 @@ class Zefir_Application_Model {
 		}
 		
 		return ($set);
+	}
+	
+	/**
+	 * Create array with objects from mysql resource
+	 * 
+	 * @access private
+	 * @param Zend_Db_Rowset $rowset
+	 * @return array $set;
+	 * @todo add fetching children data if _with is not empty
+	 */
+	protected function _retrieveFetchedData($rowset)
+	{
+		$set = array();
+		$primaryKey = $this->getDbTable()->getPrimaryKey();
+		foreach ($rowset as $row)
+		{
+			$object = new $this;
+			$set[$row->$primaryKey] = $object->populate($row);
+		}
 	}
 	
 	public function countAll()

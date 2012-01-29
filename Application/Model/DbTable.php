@@ -105,22 +105,47 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
   	 * Get the reference map array
   	 * 
   	 * @access public
-  	 * @return array an array of related tables relation
+  	 * @param null|string $name name of the parent resource
+  	 * @return boolean|array $belongsTo an array of related tables relation
   	 */
-	public function getHasMany()
+	public function getHasMany($name = null)
 	{
-		return $this->_hasMany;
+		if ($name != null && isset($this->_hasMany[$name]))
+		{
+			return $this->_hasMany[$name];
+		}
+		elseif ($name == null)
+		{
+			return $this->_hasMany;
+		}
+		else 
+		{
+			return false;
+		}
 	}
 	
 	/**
   	 * Get the reference map array
   	 * 
   	 * @access public
-  	 * @return array an array of related tables relation
+  	 * @param null|string $name name of the parent resource
+  	 * @return boolean|array $belongsTo an array of related tables relation
   	 */
-	public function getBelongsTo()
+	public function getBelongsTo($name = null)
 	{
-		return $this->_belongsTo;
+		if ($name != null && isset($this->_belongsTo[$name]))
+		{
+			return $this->_belongsTo[$name];
+		}
+		elseif ($name == null)
+		{
+			return $this->_belongsTo;
+		}
+		else 
+		{
+			return false;
+		}
+		
 	}
 	
 	/**
@@ -270,6 +295,16 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 		$select = $this->select()->where($cond, $val);
 		
 		return $this->fetchAll($select);
+	}
+	
+	protected function _isBelongsTo($name)
+	{
+		return isset($this->_belongsTo[$name]);
+	}
+	
+	protected function _isHasMany($name)
+	{
+		return isset($this->_hasMany[$name]);
 	}
 	
 	/**
@@ -700,6 +735,97 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 		return $this->fetchAll($args);
 	}
 	
+	public function getAllWithChildren($children, $cond = array())
+	{
+		$select = $this->_prepareSelect($children);
+		foreach($cond as $column => $value)
+		{
+			$select->where($column .'=?', $value);
+		}
+		
+		return $this->getAdapter()->query($select);
+	}
+	
+	public function getWithChildren($id, $children)
+	{
+		if (is_int($id) || ctype_digit($id))
+		{
+			$select = $this->_prepareSelect($children);
+			$select->where('t.' . $this->getPrimaryKey() . ' = ?', $id);
+			
+			return $this->getAdapter()->query($select);
+		}
+	}
+	
+	protected function _prepareSelect($children = array())
+	{
+		$select = $this->select()->setIntegrityCheck(false)
+							->from(array('t' => $this->getTableName()))
+							->order('t.' . $this->getPrimaryKey());
+		
+		foreach($children as $i => $child)
+		{
+			//check if the resource is a parent resource
+			if ($this->_isBelongsTo($child))
+			{
+				$data = $this->getBelongsTo($child);
+				$object = new $data['model'];
+				$iden = 'j'.$i;
+				$select->joinLeft(array( $iden => $object->getTableName()),
+						"t.{$data['column']} = j{$i}.{$data['refColumn']}");
+				
+				if (isset($data['order']))
+					$select->order($iden.'.'.$data['order']);
+				else
+					$select->order($iden.'.'.$object->getPrimaryKey());
+			}
+			
+			if ($this->_isHasMany($child))
+			{
+				$data = $this->getHasMany($child);
+				$object = new $data['model'];
+				if (isset($data['joinTable']) || isset($data['joinModel']))
+				{
+					if (isset($data['joinModel'])) 
+					{
+						$object = new $data['joinModel'];
+						$table = $object->getTableName();
+					}
+					else
+					{
+						$table = $data['joinTable'];
+					}
+					
+					$idenT = 'jt'.$i;
+					$select->joinLeft(array($idenT => $table), 
+						"t.{$this->getPrimaryKey()} = jt{$i}.{$data['refColumn']}");
+					
+					$iden = 'j'.$i;
+					$select->joinLeft(array($iden => $object->getTableName()),
+							"jt{$i}.{$data['joinRefColumn']} = j{$i}.{$object->getPrimaryKey()}");
+					
+					if (isset($data['order']))
+						$select->order($iden.'.'.$data['order']);
+					else
+						$select->order($iden.'.'.$object->getPrimaryKey());
+				}
+				else
+				{
+					$iden = 'j'.$i;
+					$select->joinLeft(array($iden => $object->getTableName()), 
+							"t.{$this->getPrimaryKey()} = j{$i}.{$data['refColumn']}");
+					
+					if (isset($data['order']))
+						$select->order($iden.'.'.$data['order']);
+					else
+						$select->order($iden.'.'.$object->getPrimaryKey());
+				}
+			}
+		}
+		
+		return $select;
+	}
+	
 	public function findData($conditions, $and, $strict)
 	{
 		$select = $this->select();
@@ -719,6 +845,21 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 		}
 		
 		return $this->fetchAll($select);
+	}
+	
+	public function fetchAll($with = array())
+	{
+		
+		if (!is_array($with))
+		{
+			return parent::fetchAll($with);
+		}
+		else
+		{
+			$select = $this->_prepareSelect($with);
+			
+			return parent::fetchAll($select);
+		}
 	}
 	
 	public function fetchAllFrom($table)

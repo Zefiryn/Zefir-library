@@ -732,7 +732,7 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 	
 	public function getAll($args)
 	{
-		return $this->fetchAll($args);
+		return parent::fetchAll($args);
 	}
 	
 	public function getAllWithChildren($children, $cond = array())

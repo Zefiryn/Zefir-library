@@ -712,7 +712,7 @@ class Zefir_Application_Model {
 	 * @return array $set
 	 */
 	protected function _getChild($name)
-	{		
+	{
 		if (isset($this->$name) && $this->$name != null)
 		{	
 			$set = $this->$name;
@@ -723,8 +723,8 @@ class Zefir_Application_Model {
 			//$column = $association['refColumn'];
 
 			$tableData = $this->_getTable($association, $this->getDbTable()->getTableName(), $this->getDbTable()->getPrimaryKey());
-			
 			$set = $tableData;
+			
 			if (isset($association['order']))
 			{
 				$this->_fetchingChildren = $name; 	
@@ -751,12 +751,13 @@ class Zefir_Application_Model {
 		//if no data in $_tables property, get them from cache of fetch
 		if (!isset(self::$_tables[$modelName]))
 		{
+			
 			//array of cached table; each value if Db_Row
 			if (self::$_cache) 
 			{
 				$tableData = self::$_cache->load($modelName);
 			}
-				
+			
 			if (!isset($tableData) || !$tableData)
 			{
 				//load entire table data from the database
@@ -927,9 +928,9 @@ class Zefir_Application_Model {
 			{
 				$table['data'] = array();
 				$key = $this->getDbTable()->getPrimaryKey();
-				foreach($this->getDbTable()->fetchAll() as $obj)
+				foreach($this->_fetchAll() as $obj)
 				{
-					$table['data'][$obj[$key]] = $obj; 
+					$table['data'][$obj->$key] = $obj; 
 				}
 			}
 			self::$_cache->save($table, get_class($this), array('table', get_class($this)));

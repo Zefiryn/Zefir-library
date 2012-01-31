@@ -89,22 +89,32 @@ class Zefir_Controller_Action extends Zend_Controller_Action
 	 * @access private
 	 * @return void
 	 */
-	protected function _startLogger()
+	protected function _startLogger($file = null)
 	{
 		$logger = new Zend_Log();
+		$file = $file == null ? 'debug' : $file;
 		
 		if (is_writable(APPLICATION_PATH.'/../log/'))
 		{
-			$writer = new Zend_Log_Writer_Stream(APPLICATION_PATH.'/../log/debug.log');
+			$writer = new Zend_Log_Writer_Stream(APPLICATION_PATH.'/../log/'.$file.'.log');
 			$format = '%timestamp%: %priorityName%: %message%'.PHP_EOL;
 			
 			$formatter = new Zend_Log_Formatter_Simple($format);
 			$writer->setFormatter($formatter);
 			$logger->addWriter($writer);
-			$this->_log = $logger;
+			$this->_log[$file] = $logger;
 			
-			Zend_Registry::set('log', $logger);
+			if ($file == 'debug') 
+			{
+				Zend_Registry::set('log', $logger);
+			}
+			else 
+			{
+				Zend_Registry::set('log_'.$file, $logger);
+			}
 		}
+		
+		return $logger;
 	}
 	
 	/**
@@ -114,7 +124,7 @@ class Zefir_Controller_Action extends Zend_Controller_Action
 	 * @param mixed $message
 	 * @return void
 	 */
-	protected function _log($message)
+	protected function _log($message, $file = 'debug')
 	{
 		if (is_bool($message) || is_null($message)) {
 			$message = var_export($message, true);
@@ -122,10 +132,12 @@ class Zefir_Controller_Action extends Zend_Controller_Action
 			$message = print_r($message, true);
 		}
 		
-		if ($this->_log)
+		if (!isset($this->_log[$file]) || $this->_log[$file] instanceof Zend_Log)
 		{
-			$this->_log->log($message, Zend_Log::DEBUG);
+			$this->_startLogger($file);
 		}
+		$this->_log[$file]->log($message, Zend_Log::DEBUG);
+		
 
 	}
 	

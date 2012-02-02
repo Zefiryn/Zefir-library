@@ -31,6 +31,7 @@ class Zefir_View_Template extends Zend_View
 		
 		//set the template name variable in the template
 		$this->template = $template;
+		$this->addHelperPath(APPLICATION_PATH.'/views/'.$template.'/helpers/', 'Helper');
 		
 		$options = Zend_Registry::get('options');
 		//add basic js script for the current template

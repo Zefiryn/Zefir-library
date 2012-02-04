@@ -715,11 +715,18 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 	
 	}
 
-	public function getRowsNum()
+	public function getRowsNum($where = null)
 	{
 		$select = $this->select()->from(array($this->getTableName()),
 										array('rows' => 'COUNT(*)'));
 										
+		if ($where && is_array($where)) 
+		{
+			foreach($where as $cond => $bind)
+			{
+				$select->where($cond, $bind);
+			}
+		}
 		$row = $this->fetchRow($select);
 		
 		return $row->rows;

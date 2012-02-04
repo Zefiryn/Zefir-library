@@ -290,15 +290,18 @@ class Zefir_Application_Model {
 	 */
 	public function populate($row)
 	{
-		$properties = array_keys(get_object_vars($this));
-		
-		$row = (is_array($row)) ? $row : $row->toArray();
-		
-		foreach($properties as $property)
+		if ($row != null && (is_array($row) || method_exists($row, 'toArray')))
 		{
-			if (isset($row[$property]))
-				$this->$property = $row[$property];
+			$properties = array_keys(get_object_vars($this));
 			
+			$row = (is_array($row)) ? $row : $row->toArray();
+			
+			foreach($properties as $property)
+			{
+				if (isset($row[$property]))
+					$this->$property = $row[$property];
+				
+			}
 		}
 		return $this;
 	}

@@ -349,11 +349,12 @@ class Zefir_Controller_Action extends Zend_Controller_Action
 	protected function _getCurrentPage()
 	{
 		$link = $this->getRequest()->getRequestUri();
+		$languages = $this->_getLanguages();
 		
 		if ($link == '/')
 			$link = 'index';
 		
-		elseif (in_array(substr($link, 1, 2), array('pl', 'cs', 'sk', 'hu', 'en')))
+		elseif (in_array(substr($link, 1, 2), $languages))
 		{
 			$link = substr($link, 4);
 		}
@@ -362,5 +363,28 @@ class Zefir_Controller_Action extends Zend_Controller_Action
 			$link = substr($link, 1);
 		
 		return $link;
+	}
+	
+	protected function _getLanguages()
+	{
+		$options = Zend_Registry::get('options');
+		$source = $options['i18n']['translation_source'];
+		if ($source == 'db')
+		{
+			$localization = new Application_Model_Localizations();
+			return array_values($localization->getAllLanguages());
+		}
+		elseif ($source == 'csv')
+		{
+			$folder = APPLICATION_PATH . '/configs/lang/';
+			foreach(scandir($folder) as $file) 
+			{
+				if (preg_match('/^[a-z]{2}\.csv$/', $entry)) 
+				{
+					$langs[] = substr($entry, -4);
+				}	
+			}
+			return $langs;
+		}
 	}
 }

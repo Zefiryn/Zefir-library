@@ -68,13 +68,13 @@ class Zefir_Action_Helper_Localization extends Zend_Controller_Action_Helper_Abs
 		}
 		else 
 			$lang = $browser_lang;
-			
+		
 		//check if the language exist
 		if ($this->_langExists($lang, $options['i18n']['translation_source']))
 			$lang = $lang;
 		else
 			$lang = $options['i18n']['default_language'];
-
+		
 		
 		//set current value in cookie and in session
 		setcookie("lang",$lang, time() + (60*60*24*14) , '/');
@@ -104,7 +104,7 @@ class Zefir_Action_Helper_Localization extends Zend_Controller_Action_Helper_Abs
 	
 	private function _setLocale($lang)
 	{
-		$array = array('pl' => 'pl_PL', 'cs' => 'cs_CZ', 'sk' => 'sk_SK', 'en' => 'en_UK', 'hu' => 'hu_HU');
+		$array = array('pl' => 'pl_PL', 'cz' => 'cs_CZ', 'sk' => 'sk_SK', 'en' => 'en_UK', 'hu' => 'hu_HU');
 		
 		//locale object
 		$zl = new Zend_Locale();

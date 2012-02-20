@@ -731,7 +731,7 @@ class Zefir_Application_Model {
 			if (isset($association['order']))
 			{
 				$this->_fetchingChildren = $name; 	
-				usort($set, array($this, '_sortChildren'));
+				//usort($set, array($this, '_sortChildren'));
 			}
 			
 			$this->$name = $set;
@@ -867,7 +867,13 @@ class Zefir_Application_Model {
 			$tableData += $this->_retrieveJoinSchema($association);
 		}
 		
-		foreach($model->getDbTable()->fetchAll() as $row)
+		if (isset($association['order'])) {
+			$select = $model->getDbTable()->select()->order($association['order']);
+		}
+		else {
+			$select = null;
+		}
+		foreach($model->getDbTable()->fetchAll($select) as $row)
 		{
 			$obj = new $modelName;
 			$obj->populate($row);

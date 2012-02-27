@@ -80,22 +80,22 @@ class Zefir_Filter
 		$str.=	'U	i	a	G	k	O	u	i	C	g	k	o	U	i	c	G	L	O	u	i	C	g	l	o	U	o	c	G	L	R	u	n	C	g	l	r	U	';
 		$acc.=	'ò	ċ	Ĥ	Ľ	Ŗ	ů	ó	Č	ĥ	ľ	ŗ	Ű	ô	č	Ħ	Ŀ	Ř	ű	õ	Ď	ħ	ŀ	ř	Ų	ö	ď	Ĩ	Ł	Ś	ų	Đ	ĩ	ł	ś	Ŵ	ø	đ	';
 		$str.=	'o	c	H	L	R	u	o	C	h	l	r	U	o	c	H	L	R	u	o	D	h	l	r	U	o	d	I	L	S	c	D	i	l	s	W	o	d	';
-		$acc.=	'Ī	Ń	Ŝ	ŵ	ù	Ē	ī	ń	ŝ	Ŷ	Ə	ú	ē	Ĭ	Ņ	Ş	ŷ	 	:	;	.	,';
-		$str.=	'I	N	S	w	u	E	i	n	s	Y	e	u	e	I	N	S	y	-	-	-	-	-';
+		$acc.=	'Ī	Ń	Ŝ	ŵ	ù	Ē	ī	ń	ŝ	Ŷ	Ə	ú	ē	Ĭ	Ņ	Ş	ŷ	 	:	;	.	,	‑';
+		$str.=	'I	N	S	w	u	E	i	n	s	Y	e	u	e	I	N	S	y	-	-	-	-	-	-';
 	
 		$out = str_replace(explode("\t", $acc), explode("\t", $str), $s);
-	
+
 		if($case == -1)
 		{
-			return strtolower(preg_replace('/[^a-zA-Z0-9_-]/', '', $out));
+			return strtolower(preg_replace('/[^a-zA-Z0-9_\-]/', '', $out));
 		}
 		else if($case == 1)
 		{
-			return strtoupper(preg_replace('/[^a-zA-Z0-9_-]/', '', $out));
+			return strtoupper(preg_replace('/[^a-zA-Z0-9_\-]/', '', $out));
 		}
 		else
 		{
-			return preg_replace('/[^a-zA-Z0-9_-]/', '', $out);
+			return preg_replace('/[^a-zA-Z0-9_\-]/', '', $out);
 		}
 	}
 	

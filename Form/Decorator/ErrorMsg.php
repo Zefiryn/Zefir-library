@@ -23,7 +23,7 @@ class Zefir_Decorator_ErrorMsg extends Zend_Form_Decorator_Abstract
 		$tag			= $this->getOption('tag') ?  $this->getOption('tag') : 'div';
 		$errorMsgTag 	= $this->getOption('errorMsgTag') ?  $this->getOption('errorMsgTag') : 'p';
 		$image 			= $this->getOption('image') ?  TRUE : FALSE;
-		$class			= 'error-div';
+		$class			= 'error-div field-' . strtolower(substr($elementType, strrpos($elementType, '_')+1));
 		$errorMsgClass	= 'error';
 		$errorImgClass 	= $elementType == 'Zend_Form_Element_Textarea' ? 'textarea-error' : 'error';
 		

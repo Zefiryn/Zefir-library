@@ -510,14 +510,20 @@ class Zefir_Application_Model {
 	 */
 	public function populateFromForm($data)
 	{
+		$reflection = new ReflectionObject($this);
+		foreach($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $prop)
+		{
+			$properties[$prop->getName()] = 1;
+		};
 		foreach ($data as $key => $value)
 		{
 			if (strstr($key, 'Cache'))
 			{
 				$key = substr($key, 0, strpos($key, 'Cache'));
 			}
-			
-			$this->$key = $value;
+			if (isset($properties[$key])) {
+				$this->$key = $value;
+			}
 		}
 		
 		return $this;

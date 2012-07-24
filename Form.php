@@ -8,7 +8,7 @@ class Zefir_Form extends Zend_Form
 	protected $_regex = array(
 		'L' => 'a-zA-ZÁáČčĎďÉéĚěÍíŇňÓóŘřŠšŤťÚúŮůÝýŽžÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëíìíîïñòóôõöùúûüýÿĂĄăąĆćĈĉĊċČčĎĕĘęĚěĜĝĞğĠġĢģĤĥĴĵĶķĸĹĺĻļŁłŃŅńņŇňŎŏŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŨũŬŭŮŰůűŲųŴŵŶŸŷýŹźŻżŽž',
 		'N' => '0-9',
-		'S' => '&\.\-_;,"”„–:!?\(\)\/\'@   ',
+		'S' => '%&\.\-_;,"”„–:!?\(\)\/\'@   ',
 		'E' => '\s\n\r',
 		'B' => '\[\]~\/#=+'
 	);
@@ -91,8 +91,8 @@ class Zefir_Form extends Zend_Form
 		));	 
 		$submit->setDecorators(array(
 							array('ViewHelper')
-            				));
-     	$this->addElement($submit);
+    					));
+    $this->addElement($submit);
 
 
 		$submit = $this->createElement('submit', 'submit', array(
@@ -102,9 +102,9 @@ class Zefir_Form extends Zend_Form
 		));	 
 		$submit->setDecorators(array(
 							array('ViewHelper')
-            				));
+     				));
             				
-      	$this->addElement($submit);
+    $this->addElement($submit);
 	}
 	
 	protected function _createCsrfElement()

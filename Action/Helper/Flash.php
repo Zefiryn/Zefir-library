@@ -34,8 +34,8 @@ class Zefir_Action_Helper_Flash extends Zend_Controller_Action_Helper_Abstract
     		$view->flash = '';
     		
     	$newflash = new Zend_Session_Namespace('flash');
-		$newflash->message = NULL;
-		$newflash->message_bg = NULL;
+			$newflash->message = NULL;
+			$newflash->message_bg = NULL;
 		
 	}
 	

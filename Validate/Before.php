@@ -110,8 +110,17 @@ class Zefir_Validate_Before extends Zend_Validate_Abstract
 		$date = $this->_getReferenceFieldValue($context);
 		$this->_date = date($this->_getFormat(), $date);
 		
-		$dateData = date_parse_from_format($this->_getFormat(), $value);
-		if ( !checkdate($dateData['month'], $dateData['day'], $dateData['year']))
+		if (function_exists('date_parse_from_format')) {
+			$dateData = date_parse_from_format($this->_getFormat(), $value);
+		}
+		else {
+			$stamp = strtotime($value);
+			$dateData['month'] = date('m', $stamp);
+			$dateData['year'] = date('Y', $stamp);
+			$dateData['day'] = date('d', $stamp);
+		}
+			
+		if ( !checkdate((int)$dateData['month'], (int)$dateData['day'], (int)$dateData['year']))
 		{
 			$this->_error(self::WRONG_DATE);
 			return FALSE;
@@ -122,7 +131,6 @@ class Zefir_Validate_Before extends Zend_Validate_Abstract
 			$this->_error(self::NOT_BEFORE);
 			return FALSE;	
 		}
-		
 		
 		return TRUE;
     }

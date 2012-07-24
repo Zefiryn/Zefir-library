@@ -76,6 +76,11 @@ class Zefir_Action_Helper_UserSession extends Zend_Controller_Action_Helper_Abst
 		$acl = Zend_Registry::get('acl');
 		$redirect = new Zend_Controller_Action_Helper_Redirector();
 		$request = $this->getActionController()->getRequest();
+		$config = Zend_Registry::get('options');
+		
+		if ($config['redirect']['absolute']) {
+			$redirect->setUseAbsoluteUri(true);
+		}		
 		
 		if (!$acl->isAllowed($role, $request->getControllerName(), $request->getActionName())
 			&& !$auth->hasIdentity())

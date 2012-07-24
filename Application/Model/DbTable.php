@@ -433,6 +433,9 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 		$sourceX = 0;
 		$sourceY = 0;
 		
+		$destX = 0; 
+		$destY = 0;
+		
 		//set dimensions for the thumbnail
 		$newHeight = $oldHeight;
 		$newWidth = $oldWidth;
@@ -488,10 +491,11 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 		{
 			if($crop) 
 			{
-				$sourceWidth = round($oldHeight / $height * $width);
-				$sourceX = round(($oldWidth - $sourceWidth) / 2);
-				$newWidth = $width;
-				$newHeight = $height;
+				$_scale=min((float)($oldWidth/$width),(float)($oldHeight/$height));
+				$cropX=(float)($oldWidth-($_scale*$width));
+				$cropY=(float)($oldHeight-($_scale*$height));
+				$newWidth=(float)($oldWidth-$cropX);
+				$newHeight=(float)($oldHeight-$cropY);
 			} 
 			else 
 			{
@@ -550,9 +554,16 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 		} 
 		else 
 		{
-			if(!@imagecopyresampled($image2, $image1, 0, 0, $sourceX, $sourceY, $newWidth, $newHeight, $sourceWidth, $sourceHeight)) 
-			{
-				throw new Zend_Exception('Tworzenie miniatury nie powiodło się.2');
+			if ($crop) {
+				if (!@imagecopy($image2,$image1, 0,0,(int)($cropX/2),(int)($cropY/2),$newWidth,$newHeight)){
+					throw new Zend_Exception('Tworzenie miniatury nie powiodło się.2');
+				}
+			}
+			else {
+				if(!@imagecopyresampled($image2, $image1, $destX, $destY, $sourceX, $sourceY, $newWidth, $newHeight, $sourceWidth, $sourceHeight)) 
+				{
+					throw new Zend_Exception('Tworzenie miniatury nie powiodło się.2');
+				}
 			}
 		
 			//zapisywanie miniaturki

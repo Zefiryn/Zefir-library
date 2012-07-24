@@ -120,7 +120,16 @@ class Zefir_Validate_DatePeriod extends Zend_Validate_Abstract
 		$startDate = $this->_getStartDate();
 		$endDate = $this->_getEndDate();
 		$date = strtotime($value);
-		$dateData = date_parse_from_format($this->_getFormat(), $value);
+		
+		if (function_exists('date_parse_from_format')) {
+			$dateData = date_parse_from_format($this->_getFormat(), $value);
+		}
+		else {
+			$stamp = strtotime($value);
+			$dateData['month'] = date('m', $stamp);
+			$dateData['year'] = date('Y', $stamp);
+			$dateData['day'] = date('d', $stamp);
+		}
 
 		if ( !checkdate($dateData['month'], $dateData['day'], $dateData['year']))
 		{

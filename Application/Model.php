@@ -808,7 +808,7 @@ class Zefir_Application_Model {
 		}
 		else
 		{//basic data				
-			return self::$_tables[$modelName]['data'];
+			return isset(self::$_tables[$modelName]['data']) ? self::$_tables[$modelName]['data'] : array();
 		}
 	}
 		
@@ -1034,7 +1034,12 @@ class Zefir_Application_Model {
 			$property = $this->_image['property'];
 			$file = $this->$property;
 			$ext = Zefir_Filter::getExtension($file);
-			return str_replace('.'.$ext, '_'.$key.'.'.$ext, $file);
+			$fileName = str_replace('.'.$ext, '_'.$key.'.'.$ext, $file);
+			$check= APPLICATION_PATH.'/../public'.$this->_image['dir'].'/'.$fileName;
+			if (!file_exists($check)) {
+				$this->resizeImage();
+			}
+			return $fileName;
 		}	
 		return FALSE;
 	}
@@ -1062,6 +1067,25 @@ class Zefir_Application_Model {
 		}
 		
 		return FALSE;
+	}
+	
+	public function removeImage() 
+	{
+		if (isset($this->_image))
+		{
+			$dir = APPLICATION_PATH.'/../public'.$this->_image['dir'].'/';
+			$property = $this->_image['property'];
+			
+			foreach($this->getThumbnails() as $key)
+			{
+				unlink($dir.$this->getImage($key));
+			}
+			unlink($dir.$this->$property);
+			return TRUE;
+		}
+		
+		return FALSE;
+		
 	}
 	
 	/**

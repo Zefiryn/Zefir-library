@@ -204,7 +204,7 @@ class Zefir_Controller_Action extends Zend_Controller_Action
      * 
      * @access private
      * @param string $cache_folder
-     * @param Application_Book_Form $form
+     * @param Zend_Form $form
      * @param string $element
      * @return Zend_Form $form 
      */
@@ -348,8 +348,11 @@ class Zefir_Controller_Action extends Zend_Controller_Action
      */
 	protected function _getCurrentPage()
 	{
+		$config = Zend_Registry::get('options');
 		$link = $this->getRequest()->getRequestUri();
 		$languages = $this->_getLanguages();
+		
+		$link = str_replace($config['resources']['frontController']['baseUrl'], '/', $link);
 		
 		if ($link == '/')
 			$link = 'index';
@@ -361,6 +364,7 @@ class Zefir_Controller_Action extends Zend_Controller_Action
 		
 		else 
 			$link = substr($link, 1);
+		
 		
 		return $link;
 	}

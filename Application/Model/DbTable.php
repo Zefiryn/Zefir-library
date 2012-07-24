@@ -700,7 +700,7 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 		{
 			$row->$name = $object->$name;
 		}
-	
+		
 		if ($row->save())
 		{
 			if ($id == null)

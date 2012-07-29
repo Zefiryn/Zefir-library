@@ -78,7 +78,7 @@ class Zefir_Action_Helper_UserSession extends Zend_Controller_Action_Helper_Abst
 		$request = $this->getActionController()->getRequest();
 		$config = Zend_Registry::get('options');
 		
-		if ($config['redirect']['absolute']) {
+		if (isset($config['redirect']['absolute']) && $config['redirect']['absolute'] == TRUE)  {
 			$redirect->setUseAbsoluteUri(true);
 		}		
 		

@@ -1037,7 +1037,11 @@ class Zefir_Application_Model {
 			$fileName = str_replace('.'.$ext, '_'.$key.'.'.$ext, $file);
 			$check= APPLICATION_PATH.'/../public'.$this->_image['dir'].'/'.$fileName;
 			if (!file_exists($check)) {
-				$this->resizeImage();
+				try { 
+				  $this->resizeImage();
+			  } catch (Exception $e) {
+			    $fileName = null;
+			  }
 			}
 			return $fileName;
 		}	

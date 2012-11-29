@@ -107,12 +107,21 @@ class Zefir_Form extends Zend_Form
     $this->addElement($submit);
 	}
 	
-	protected function _createCsrfElement()
+	/*
+	* Create csrf element
+	* 
+	* @int $ttl time to live of the hash in seconds
+	* @return Zefir_Form $this
+	*/
+	protected function _createCsrfElement($ttl = 1800)
 	{
 		$this->addElement('hash', 'csrf', array(
 			'ignore' => true,
 			'salt' => 'unique',
+			'timeout' => $ttl,
 			'decorators' => array(	array('ViewHelper'))	
 		));
+		
+		return $this;
 	}
 }

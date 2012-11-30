@@ -703,8 +703,11 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 		
 		if ($row->save())
 		{
-			if ($id == null)
-				$object->$primary = $id = $this->getAdapter()->lastInsertId();
+			if ($id == null) 
+			{
+				$id = $this->getAdapter()->lastInsertId();
+				$object->$primary = $id;
+			}				
 		}
 		else 
 		{

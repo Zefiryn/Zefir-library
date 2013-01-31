@@ -559,7 +559,7 @@ class Zefir_Application_Model {
 		{
 			$cache = Zend_Registry::get('cache');
 			$cache->remove(get_class($this));
-			//$cache->clean(Zend_Cache::CLEANING_MODE_MATCHING_TAG, array('table'));
+			$cache->clean(Zend_Cache::CLEANING_MODE_MATCHING_TAG, array('table'));
 		}
 		$this->getDbTable()->delete($this);
 		if (count($this->_image) > 0 )

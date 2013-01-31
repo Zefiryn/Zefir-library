@@ -685,8 +685,8 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 		
 		//create name of the property that holds primary column data
 		$id = $object->$primary;
-		
-		//get the row from the databases
+
+    //get the row from the databases
 		$row = $this->find($id)->current();
 		
 		if (!$row)
@@ -700,9 +700,10 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 		{
 			$row->$name = $object->$name;
 		}
-		
-		if ($row->save())
+    
+    if ($row->save())
 		{
+      
 			if ($id == null) 
 			{
 				$id = $this->getAdapter()->lastInsertId();

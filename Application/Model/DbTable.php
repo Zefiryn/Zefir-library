@@ -869,16 +869,16 @@ class Zefir_Application_Model_DbTable extends Zend_Db_Table_Abstract
 		return $this->fetchAll($select);
 	}
 	
-	public function fetchAll($with = array())
+	public function fetchAll($where = null, $order = null, $count = null, $offset = null)
 	{
 		
-		if (!is_array($with))
+		if (!is_array($where))
 		{
-			return parent::fetchAll($with);
+			return parent::fetchAll($where);
 		}
 		else
 		{
-			$select = $this->_prepareSelect($with);
+			$select = $this->_prepareSelect($where);
 			
 			return parent::fetchAll($select);
 		}

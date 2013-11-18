@@ -92,18 +92,7 @@ class Zefir_Validate_Login extends Zend_Validate_Abstract {
 			$this->_error(self::MSG_MAXIMUM);
 			return false;
 		}
-		
-		if ( !preg_match('/[a-z]/', $value) ) {
-			$this->_error(self::MSG_ONESMALLLETTER);
-			return false;
-		}
 
-		/*
-		if ( !preg_match('/[A-Z]/', $value) ) {
-			$this->_error(self::MSG_ONEBIGLETTER);
-			return false;
-		}		   
-		*/
 		return true;
 		
 	}
